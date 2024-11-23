@@ -1,2 +1,4 @@
-puts File.read("day01.txt")
+File.readlines("day01.txt").each_with_index do | line, i |
+  puts line
+end
 
