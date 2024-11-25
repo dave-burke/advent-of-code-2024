@@ -55,8 +55,15 @@ build-iPhoneSimulator/
 # Used by RuboCop. Remote config files pulled in from inherit_from directive.
 # .rubocop-https?--*
 
-# AOC session file
+# AOC session file (for downloading input)
 session.txt
 
 # AOC input files
+# https://adventofcode.com/about#faq_copying
 day*.txt
+
+# html puzzle data (for offline work)
+
+
+# html puzzle data (for offline work)
+/html
