@@ -1,4 +1,39 @@
+# Strings
+
+string = "Hello, world!"
+string.length # 13 -- also .size
+string.count("l") # 3
+string.index(", ") # 5
+string[5] # ,
+
+string.include? "!" # true
+string.start_with? "Hello" # true
+string.end_with? "world!" # true
+
+string.match? "\s" # true
+string.scan("[aeiou]") # ['e', 'o', 'o'] -- can also use a block 'for each match'
+
+string.gsub("l", "p") # Heppo, worpd! -- also sub for first only
+string.delete("l") # heo word!
+string.delete_prefix("He") # llo, world!
+string.delete_suffix(", world!") # Hello
+
+"   foo   ".strip # 'foo' -- also lstrip/rstrip
+string.squeeze # helo, world!
+string.tr "el" "ip" # hippo, worpd!
+
+
+string.next # "Hello, worle!" also prev also .succ
+"10".upto("20") { |num| puts num } # print 10-20; works with letters
+
+string.split(", ") # ["Hello", "world!"]
+"foo\nbar".lines # ['foo\n', 'bar']
+string.each_char do |c| # also each_line
+  print c
+end
+
 # Arrays
+
 arr = [1, 2, 3]
 arr << 4 # append
 puts arr.first + arr[1] + arr[-1]
@@ -19,12 +54,16 @@ def sum(*nums)
 end
 puts sum(arr)
 
+# Hashes
+
 hash = { "spam" => "eggs", :pancakes => "syrup", spam: "eggs" }
 puts hash.key?(:spam) # true
 puts hash.value?("eggs") #true
 hash.each do |key,value|
   puts key.to_s + ": " + value
 end
+
+# Classes
 
 class SomeData
 
@@ -77,8 +116,8 @@ class Book
   extend ModuleExample
 end
 
-Person.foo     #=> NoMethodError: undefined method `foo' for Person:Class
+#Person.foo     #=> NoMethodError: undefined method `foo' for Person:Class
 Person.new.foo #=> "foo"
 Book.foo       #=> "foo"
-Book.new.foo   #=> NoMethodError: undefined method `foo'
+#Book.new.foo   #=> NoMethodError: undefined method `foo'
 
