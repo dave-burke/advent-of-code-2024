@@ -43,6 +43,14 @@ puts "ISO: #{year}-#{month}-#{day}"
 'Hello, world!'.scan(/[aeiou]/) # ["e", "o", "o"]
 
 # Dates
+require('date')
+
+start = Date.new(1985, 10, 25)
+middle = Date.parse('1955-11-05')
+finish = Date.strptime('10/21/2015', '%m/%d/%Y')
+puts start, middle, finish
+start.leap?
+puts middle.upto(finish).to_a.size
 
 # Sets
 
