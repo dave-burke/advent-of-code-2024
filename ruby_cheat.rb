@@ -53,6 +53,26 @@ start.leap?
 puts middle.upto(finish).to_a.size
 
 # Sets
+require 'set'
+s1 = Set[1, 2] #=> #<Set: {1, 2}>
+s1.each { |n| puts n }
+s1.empty? # false
+s1.include? 1 # true
+s2 = [1, 2].to_set #=> #<Set: {1, 2}>
+s2.classify { |n| (n % 2).zero? } # { false => Set[1], true => Set[2]}
+s2.map { |n| n * 2 } # Set[2,4]
+puts Set[1, 2] + Set[3, 4] # Set[1,2,3,4]
+puts s1 == s2 #=> true
+s1.add('foo') #=> #<Set: {1, 2, "foo"}>
+s1.merge([2, 6]) #=> #<Set: {1, 2, "foo", 6}>
+s1.delete 2 # Set{1}
+s2.delete_if { |n| (n % 2).zero? } # Set[1]
+s2.keep_if { |n| (n % 2).zero? } # Set[2]
+s2.subset?(s1) #=> true
+s2.superset?(s1) #=> true
+Set[1, 2].disjoint? Set[3, 4] # true -- they have nothing in common
+Set[1, 2, 3].intersect? Set[3, 4, 5] # true -- they have one in common
+puts Set[1, 2, 3, 4] - Set[1, 2] # Set[3,4]
 
 # Arrays
 
