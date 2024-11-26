@@ -32,8 +32,15 @@ string.split(', ') # ["Hello", "world!"]
 string.each_char do |c| # also each_line
   print c
 end
+print "\n"
 
 # Regex
+/world/.match? 'Hello, world!' # true
+match_data = %r|(\d{2})/(\d{2})/(\d{4})|.match('04/05/2063') # use (?<name>...) for named captures match_data[:year]
+_, day, month, year = match_data.to_a # need to_a to make it an array for destructuring
+puts "ISO: #{year}-#{month}-#{day}"
+/o+?/.match 'foobar' # 'o' (lazy -- /o+/ would match 'oo')
+'Hello, world!'.scan(/[aeiou]/) # ["e", "o", "o"]
 
 # Dates
 
