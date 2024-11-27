@@ -79,12 +79,36 @@ puts Set[1, 2, 3, 4] - Set[1, 2] # Set[3,4]
 arr = [1, 2, 3]
 arr << 4 # append
 puts arr.first + arr[1] + arr[-1]
-puts arr[2, 1] << arr[2..3] # [start, length] or [range]
-puts arr.reverse unless arr.empty? # reverse! would work in-place
-puts arr.join('+') unless arr.empty?
-arr.each do |it|
-  puts it
-end
+arr[2, 1] << arr[2..3] # [start, length] or [range]
+[1, 2, 3].delete(1) # returns 1, modifies array to [2,3] -- also delete_if or delete_at
+arr.filter { (_1 % 2).zero? } # [2]
+arr.reject { (_1 % 2).zero? } # [1,3]
+arr.drop(2) # [3] -- also drop_while, take, take_while
+[1, nil, 2].compact # [1, 2] (remove nil)
+[1, 1, 2].uniq # [1, 2]
+%w[a b c d e f].values_at(1, 3, -1) # [b, d, f]
+arr.fetch(4, 'default value') # "default value" because arr.length is 3 -- can be called with a block
+[[1, [2, 3]]].dig(0, 1, 1) # 3
+arr.reverse unless arr.empty? # reverse! would work in-place
+arr.min # 1 -- can pass a block comparator. also max and minmax
+arr.sum # 6
+arr.join('+') unless arr.empty?
+arr.map { _1 * 2 } # [2, 4, 6]
+arr.combination(2) # [[1, 2], [1, 3], [2, 3]]
+arr.repeated_combination(2) # [[1, 2], [1, 2], [1, 3], [2, 2], [2, 3], [3, 3]]
+arr.permutation(2) # [[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]
+[1, 2].product([3, 4], [5, 6]) #=> [[1,3,5],[1,3,6],[1,4,5],[1,4,6],[2,3,5],[2,3,6],[2,4,5],[2,4,6]]
+arr.count(2) # 1 -- can also pass a block, or nothing to get length
+arr.cycle(2) { puts _1 } # 1,2,3,1,2,3 (with no num would cycle forever)
+arr.rotate # [2, 3, 1] -- accepts an optional count
+[[1, 2], [3, 4], [5, 6]].transpose # [[1,3,5],[2,4,6]] or zip (won't fail on length mismatch and handles any enumerable)
+arr.include? 2 # true
+arr.each { puts _1 }
+arr.all? { (_1 % 2).zero? } # false
+arr.any? { (_1 % 2).zero? } # true
+arr.none? { _1 > 4 } # true
+[%w[a b], %w[c d], %w[e f]].assoc('d') # ['c','d']
+arr.bsearch { _1 == 2 } # 2 (binary search--array must be sorted
 
 def double(num)
   num * 2
