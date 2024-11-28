@@ -5,7 +5,7 @@ require 'date'
 ##
 # Common Advent of Code utility methods
 module Aoc
-  def determine_year
+  def self.determine_year
     today = Date.today
     if today.month == 12
       today.year
@@ -25,6 +25,5 @@ module Aoc
     puts "GET #{uri} > #{file_name}"
     input = Net::HTTP.get(URI(uri), headers)
     File.write(file_name, input)
-    puts input
   end
 end
