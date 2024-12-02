@@ -25,5 +25,7 @@ module Aoc
     puts "GET #{uri} > #{file_name}"
     input = Net::HTTP.get(URI(uri), headers)
     File.write(file_name, input)
+
+    input
   end
 end
