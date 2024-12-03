@@ -3,21 +3,47 @@
 require 'net/http'
 require_relative 'aoc'
 
-Aoc.download_input_if_needed(1)
+def part1(input)
+  pairs = input.split(/\n/).map do |line|
+    /(\d+)   (\d+)/.match(line).to_a.drop(1).map(&:to_i)
+  end
 
-lines = File.readlines('day01.txt')
+  left, right = pairs.transpose
 
-pairs = lines.map do |line|
-  /(\d+)   (\d+)/.match(line).to_a.drop(1).map(&:to_i)
+  left.sort!
+  right.sort!
+
+  sorted_pairs = [left, right].transpose
+
+  diffs = sorted_pairs.map { |l, r| (l - r).abs }
+
+  puts diffs.sort!.sum
 end
 
-left, right = pairs.transpose
+def part2(input)
+  pairs = input.split(/\n/).map do |line|
+    /(\d+)   (\d+)/.match(line).to_a.drop(1).map(&:to_i)
+  end
 
-left.sort!
-right.sort!
+  left, right = pairs.transpose
 
-sorted_pairs = [left, right].transpose
+  counts = {}
+  right.each do |n|
+    if counts.key? n
+      counts[n] += 1
+    else
+      counts[n] = 1
+    end
+  end
 
-diffs = sorted_pairs.map { |l, r| (l - r).abs }
+  similarity_score = 0
+  left.each do |n|
+    similarity_score += n * counts[n] if counts.key? n
+  end
 
-puts diffs.sort!.sum
+  puts similarity_score
+end
+
+input = Aoc.download_input_if_needed(1)
+part2(input)
+# 20707984 is too low
