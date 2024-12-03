@@ -15,7 +15,7 @@ module Aoc
   end
 
   def self.download_input_if_needed(day)
-    file_name = "day#{day.to_s.rjust(2, '0')}.txt"
+    file_name = "input#{day.to_s.rjust(2, '0')}.txt"
     return File.read(file_name) if File.exist? file_name
 
     year = determine_year

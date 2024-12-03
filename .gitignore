@@ -61,6 +61,7 @@ session.txt
 # AOC input files
 # https://adventofcode.com/about#faq_copying
 day*.txt*
+input*.txt*
 
 # html puzzle data (for offline work)
 /html
