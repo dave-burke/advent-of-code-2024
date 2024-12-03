@@ -7,8 +7,11 @@ require_relative 'aoc'
 DAY = 3
 
 def part1(input)
-  lines = input.split("\n")
-  puts "There were #{lines.size} lines"
+  matches = input.scan(/mul\((\d+),(\d+)\)/)
+  puts matches
+    .map { |match| match.map(&:to_i) }
+    .map { |numbers| numbers[0] * numbers[1] }
+    .sum
 end
 
 def part2(input)
