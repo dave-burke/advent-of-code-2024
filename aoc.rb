@@ -16,7 +16,7 @@ module Aoc
 
   def self.download_input_if_needed(day)
     file_name = "day#{day.to_s.rjust(2, '0')}.txt"
-    return if File.exist? file_name
+    return File.read(file_name) if File.exist? file_name
 
     year = determine_year
     cookie = File.read('session.txt')
