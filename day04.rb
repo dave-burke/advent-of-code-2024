@@ -88,9 +88,31 @@ def part1(input)
 end
 
 def part2(input)
-  puts 'not implemented'
-  nil if input.nil?
+  lines = input.split("\n")
+  rows = lines.map(&:chars)
+
+  result = 0
+  rows.each_with_index do |row, row_i|
+    row.each_with_index do |_, col_i|
+      point = Point.new(row_i, col_i, rows)
+      next unless point.value == 'A'
+
+      top_left = point.go(DIRECTIONS[:up_left]).value
+      top_right = point.go(DIRECTIONS[:up_right]).value
+      bottom_left = point.go(DIRECTIONS[:down_left]).value
+      bottom_right = point.go(DIRECTIONS[:down_right]).value
+
+      down_right_is_mas = top_left == 'M' && bottom_right == 'S'
+      up_left_is_mas = top_left == 'S' && bottom_right == 'M'
+
+      up_right_is_mas = bottom_left == 'M' && top_right == 'S'
+      down_left_is_mas = bottom_left == 'S' && top_right == 'M'
+
+      result += 1 if (down_right_is_mas || up_left_is_mas) && (up_right_is_mas || down_left_is_mas)
+    end
+  end
+  puts result
 end
 
 input = Aoc.download_input_if_needed(DAY)
-part1(input)
+part2(input)
