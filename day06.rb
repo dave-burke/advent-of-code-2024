@@ -150,19 +150,26 @@ end
 def traverse(cursor)
   current_direction = 0
   path = [cursor]
+  unique_path = Set.new
   until path[-1].value.nil?
     current_cursor = path[-1]
     new_cursor = current_cursor.go
     if new_cursor.value == '#'
       current_direction = (current_direction + 1) % 4
       current_cursor = path.pop
+      unique_path.delete current_cursor
       path.push current_cursor.turn(DIRECTIONS[current_direction])
     else
       path.push new_cursor
+      unique_path.add new_cursor
     end
-    return 1 if path.length != Set.new(path).length
+    if path.length != unique_path.length
+      puts 'Found a cycle'
+      return 1
+    end
   end
   path.pop # remove nil value
+  puts 'Left the board'
   0
 end
 
@@ -194,4 +201,5 @@ def part2(input)
 end
 
 input = Aoc.download_input_if_needed(DAY)
+# 16084 is too high
 part2(input)
