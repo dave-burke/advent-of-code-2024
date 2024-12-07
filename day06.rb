@@ -93,13 +93,105 @@ def part1(input)
   puts "Left the area in #{path.length} points"
 
   distinct = Set.new(path)
-
   puts "That is, #{distinct.size} distinct points"
 end
 
+class Point2
+  def initialize(row, col, direction, rows)
+    @row = row
+    @col = col
+    @direction = direction
+    @rows = rows
+  end
+
+  attr_reader :row, :col
+  attr_accessor :direction
+
+  def value
+    return nil if @row.negative? || @row > @rows.length || @col.negative? || @col > @rows[0].length
+
+    @rows.dig(@row, @col)
+  end
+
+  def with_test_rows(rows)
+    Point2.new(@row, @col, @direction, rows)
+  end
+
+  def turn(new_direction)
+    Point2.new(@row, @col, new_direction, @rows)
+  end
+
+  def go
+    new_row = @row + @direction.offset_row
+    new_col = @col + @direction.offset_col
+    Point2.new(new_row, new_col, @direction, @rows)
+  end
+
+  def to_s
+    "{(#{@row},#{@col}) > #{@direction.name}}"
+  end
+
+  def hash
+    [self.class, @row, @col, @direction].hash
+  end
+
+  def ==(other)
+    eql? other
+  end
+
+  def eql?(other)
+    self.class == other.class &&
+      @row == other.row &&
+      @col == other.col &&
+      @direction == other.direction
+  end
+end
+
+def traverse(cursor)
+  current_direction = 0
+  path = [cursor]
+  until path[-1].value.nil?
+    current_cursor = path[-1]
+    new_cursor = current_cursor.go
+    if new_cursor.value == '#'
+      current_direction = (current_direction + 1) % 4
+      current_cursor = path.pop
+      path.push current_cursor.turn(DIRECTIONS[current_direction])
+    else
+      path.push new_cursor
+    end
+    return 1 if path.length != Set.new(path).length
+  end
+  path.pop # remove nil value
+  0
+end
+
 def part2(input)
-  puts input.length
+  rows = input.split("\n").map(&:chars)
+
+  init_cursor = nil
+  rows.each_with_index do |row, r|
+    row.each_with_index do |col, c|
+      init_cursor = Point2.new(r, c, DIRECTIONS[0], rows) if col == '^'
+    end
+  end
+  puts "Found cursor at #{init_cursor.row} #{init_cursor.col}"
+
+  cycle_count = 0
+  rows.each_with_index do |row, r|
+    row.each_with_index do |col, c|
+      next unless col == '.'
+
+      print "Testing (#{r},#{c})..."
+      test_rows = rows.map(&:clone)
+      test_rows[r][c] = '#'
+      test_cursor = init_cursor.with_test_rows test_rows
+      cycle_count += traverse(test_cursor)
+      print "#{cycle_count}\n"
+    end
+  end
+  puts "Found #{cycle_count} cycles"
 end
 
 input = Aoc.download_input_if_needed(DAY)
-part1(input)
+part2(input)
