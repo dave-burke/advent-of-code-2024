@@ -24,13 +24,17 @@ def part1(input)
   puts "#{result}"
 end
 
-def find_solutions(line, base = 2)
+def find_solutions(line, base = 2, eager_exit = false)
   ops = init_operators(line.nums)
   solutions = []
   until ops.nil?
     result = apply_ops(line.nums, ops)
     # puts "#{line} | #{ops} | #{result}"
-    solutions.push(ops) if result == line.total
+    if result == line.total
+      return [ops] if eager_exit
+
+      solutions.push(ops)
+    end
     ops = incr_ops(ops, base)
   end
   solutions
@@ -115,7 +119,7 @@ def part2(input)
   result = 0
   lines.each_with_index do |line, i|
     print "Line #{i}/850: "
-    solutions = find_solutions(line, 3)
+    solutions = find_solutions(line, 3, true)
     result += line.total unless solutions.empty?
     print "#{solutions.length}\n"
   end
