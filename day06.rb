@@ -59,6 +59,10 @@ class Point
       @row == other.row &&
       @col == other.col
   end
+
+  def to_s
+    "(#{@row},#{@col})"
+  end
 end
 
 def part1(input)
@@ -191,10 +195,11 @@ def part2(input)
 
   path, = traverse(init_cursor)
   puts "Default path is #{path.length} spaces long"
+  unique_path_points = Set.new(path.map { |point2| Point.new(point2.row, point2.col, rows) })
+  puts "It contains #{path.length} unique points"
 
-  # TODO: only test points that are on the default path
   cycle_count = 0
-  path.each_with_index do |path_point, i|
+  unique_path_points.each_with_index do |path_point, i|
     next unless path_point.value == '.'
 
     print "Testing #{i}: (#{path_point.row},#{path_point.col})..."
@@ -203,7 +208,7 @@ def part2(input)
     test_cursor = init_cursor.with_test_rows test_rows
     _, is_cycle = traverse(test_cursor)
     if is_cycle
-      print 'Found a cycle'
+      print "Found a cycle for #{path_point}"
       cycle_count += 1
     else
       print 'Left the board'
