@@ -150,27 +150,28 @@ end
 def traverse(cursor)
   current_direction = 0
   path = [cursor]
-  unique_path = Set.new
+  unique_path = Set.new([cursor])
   until path[-1].value.nil?
     current_cursor = path[-1]
     new_cursor = current_cursor.go
     if new_cursor.value == '#'
-      current_direction = (current_direction + 1) % 4
+      # hit a wall, turn
       current_cursor = path.pop
       unique_path.delete current_cursor
-      path.push current_cursor.turn(DIRECTIONS[current_direction])
+
+      current_direction = (current_direction + 1) % 4
+      turned_cursor = current_cursor.turn(DIRECTIONS[current_direction])
+      path.push turned_cursor
+      unique_path.add turned_cursor
     else
+      # no wall, just move along
       path.push new_cursor
       unique_path.add new_cursor
     end
-    if path.length != unique_path.length
-      puts 'Found a cycle'
-      return 1
-    end
+    return [path, new_cursor] if path.length != unique_path.length
   end
   path.pop # remove nil value
-  puts 'Left the board'
-  0
+  [path, nil]
 end
 
 def part2(input)
@@ -179,27 +180,40 @@ def part2(input)
   init_cursor = nil
   rows.each_with_index do |row, r|
     row.each_with_index do |col, c|
-      init_cursor = Point2.new(r, c, DIRECTIONS[0], rows) if col == '^'
+      if col == '^'
+        init_cursor = Point2.new(r, c, DIRECTIONS[0], rows)
+        break
+      end
     end
+    break unless init_cursor.nil?
   end
   puts "Found cursor at #{init_cursor.row} #{init_cursor.col}"
 
-  cycle_count = 0
-  rows.each_with_index do |row, r|
-    row.each_with_index do |col, c|
-      next unless col == '.'
+  path, = traverse(init_cursor)
+  puts "Default path is #{path.length} spaces long"
 
-      print "Testing (#{r},#{c})..."
-      test_rows = rows.map(&:clone)
-      test_rows[r][c] = '#'
-      test_cursor = init_cursor.with_test_rows test_rows
-      cycle_count += traverse(test_cursor)
-      print "#{cycle_count}\n"
+  # TODO: only test points that are on the default path
+  cycle_count = 0
+  path.each_with_index do |path_point, i|
+    next unless path_point.value == '.'
+
+    print "Testing #{i}: (#{path_point.row},#{path_point.col})..."
+    test_rows = rows.map(&:clone)
+    test_rows[path_point.row][path_point.col] = '#'
+    test_cursor = init_cursor.with_test_rows test_rows
+    _, is_cycle = traverse(test_cursor)
+    if is_cycle
+      print 'Found a cycle'
+      cycle_count += 1
+    else
+      print 'Left the board'
     end
+    print " #{cycle_count}\n"
   end
   puts "Found #{cycle_count} cycles"
 end
 
 input = Aoc.download_input_if_needed(DAY)
 # 16084 is too high
+# 2229 is too high
 part2(input)
