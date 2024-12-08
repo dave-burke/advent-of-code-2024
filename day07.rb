@@ -9,21 +9,47 @@ DAY = 7
 def part1(input)
   lines = input.split("\n").map { |line| parse_line(line) }
 
-  line = lines[4]
-  puts line
-  ops = init_operators(line.nums)
-  puts "#{ops}"
-  until ops.nil?
-    ops = incr_ops(ops)
-    puts "#{ops}"
+  result = 0
+  lines.each do |line|
+    solutions = find_solutions(line)
+    result += line.total unless solutions.empty?
   end
-  puts "There were #{lines.size} lines"
+  puts "#{result}"
+end
+
+def find_solutions(line)
+  ops = init_operators(line.nums)
+  result = 0
+  solutions = []
+  until ops.nil?
+    result = apply_ops(line.nums, ops)
+    # puts "#{line} | #{ops} | #{result}"
+    solutions.push(ops) if result == line.total
+    ops = incr_ops(ops)
+  end
+  solutions
+end
+
+def apply_ops(nums, ops)
+  private_ops = ops.dup
+  private_nums = nums.dup
+  result = private_nums.shift
+  until private_ops.empty?
+    op = private_ops.shift
+    num = private_nums.shift
+    if op == '+'
+      result += num
+    elsif op == '*'
+      result *= num
+    end
+  end
+  result
 end
 
 def parse_line(line)
   total, num_list = line.split(':')
-  nums = num_list.split(' ')
-  Equation.new(total, nums)
+  nums = num_list.split(' ').map(&:to_i)
+  Equation.new(total.to_i, nums)
 end
 
 ## Represents an equation without operators
