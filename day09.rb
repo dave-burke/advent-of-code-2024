@@ -53,7 +53,7 @@ end
 def fill_next(blocks)
   blocks = blocks.dup
   next_nil_i = blocks.index { |block| block.id.nil? }
-  last_char_i = blocks.rindex { |block| !block.id.nil? && block.count.positive? }
+  last_char_i = blocks.rindex { |block| !block.id.nil? }
 
   return nil if next_nil_i > last_char_i # done
 
@@ -62,11 +62,11 @@ def fill_next(blocks)
 
   if next_nil.count > last_char.count
     # Can move entire end block
-    blocks.pop
+    blocks.delete_at(last_char_i)
     remainder = next_nil.count - last_char.count
     blocks[next_nil_i] = next_nil.with_count(remainder)
     blocks.insert(next_nil_i, last_char)
-    blocks.push(Block.new(nil, next_nil.count - remainder))
+    blocks.insert(last_char_i, Block.new(nil, next_nil.count - remainder))
   else
     # Can only move part of the end block
     blocks[next_nil_i] = next_nil.with_id(last_char.id)
