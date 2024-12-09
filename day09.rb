@@ -6,9 +6,35 @@ require_relative 'aoc'
 
 DAY = 9
 
+## Represents a contiguous block for data for a single file
+class Block
+  def initialize(id, length)
+    @id = id
+    @length = length
+  end
+
+  attr_reader :id, :length
+
+  def to_s
+    "{#{@id}x#{@length}}"
+  end
+end
+
 def part1(input)
-  lines = input.split("\n")
-  puts "There were #{lines.size} lines"
+  is_file = true
+  next_id = 0
+  blocks = []
+  input.strip.chars.each do |char|
+    if is_file
+      blocks << Block.new(next_id, char)
+      next_id += 1
+    else
+      blocks << Block.new(nil, char)
+    end
+    is_file = !is_file
+  end
+
+  puts "#{blocks.map(&:to_s)}"
 end
 
 def part2(input)
