@@ -85,16 +85,12 @@ def checksum(blocks)
   result = 0
   blocks.each do |block|
     if block.id.nil?
-      if block.count.positive?
-        # puts "#{i} (nil) => #{result}"
-        i += 1
-      end
+      i += 1 if block.count.positive?
       next
     end
 
     (0..block.count - 1).each do |_|
       result += block.id.to_i * i
-      # puts "#{i} * #{block.id.to_i} => #{result}"
       i += 1
     end
   end
@@ -102,7 +98,6 @@ def checksum(blocks)
 end
 
 def part1(input)
-  # puts input
   blocks = parse_blocks(input)
 
   # i = 0
@@ -132,32 +127,31 @@ def fill_next2(blocks, id)
   return blocks if block_to_move_i < space_to_fill_i
 
   space_to_fill = blocks[space_to_fill_i]
+
   remainder = space_to_fill.count - block_to_move.count
-  if remainder.positive?
-    blocks[space_to_fill_i] = space_to_fill.with_count(remainder)
-  else
-    blocks.delete_at(space_to_fill_i)
-  end
+  blocks[space_to_fill_i] = space_to_fill.with_count(remainder)
+
   blocks.delete_at(block_to_move_i)
   blocks.insert(block_to_move_i, Block.new(nil, block_to_move.count))
 
-  before = blocks[block_to_move_i - 1]
-  current = blocks[block_to_move_i]
-  after = blocks[block_to_move_i + 1]
-
-  if !before.nil? && before.id.nil?
-    blocks.delete_at(block_to_move_i - 1)
-    blocks[block_to_move_i] = current.with_count(current.count + before.count)
-  end
-
-  if !after.nil? && after.id.nil?
-    blocks.delete_at(block_to_move_i + 1)
-    blocks[block_to_move_i] = current.with_count(current.count + after.count)
-  end
-
   blocks.insert(space_to_fill_i, block_to_move.copy)
 
-  blocks
+  blocks.reject { |block| block.count.zero? }
+end
+
+def split_nil_blocks(blocks)
+  result = []
+  blocks.each do |block|
+    if block.id.nil?
+      (0..block.count - 1).each do |_|
+        result.push(Block.new(nil, 1))
+      end
+      next
+    end
+
+    result.push(block)
+  end
+  result
 end
 
 def part2(input)
@@ -168,10 +162,12 @@ def part2(input)
   max_id = blocks[max_block_i].id.to_i
 
   (0..max_id).reverse_each do |id|
-    p blocks.map(&:to_s).join('|')
+    # puts 'id'
+    # p blocks.map(&:to_s).join('|')
     blocks = fill_next2(blocks, id)
   end
-  p blocks.map(&:to_s).join
+  blocks = split_nil_blocks(blocks)
+  # p blocks.map(&:to_s).join
   # p blocks.map(&:to_debug_s).join('|')
   puts checksum(blocks)
 end
