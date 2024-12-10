@@ -17,15 +17,19 @@ class Point
   attr_reader :row, :col, :rows
 
   def value
-    rows[row][col]
+    rows[@row][@col].to_i
+  end
+
+  def to_s
+    "(#{@row}, #{@col}) = #{value}"
   end
 
   def paths
     possible_paths = [
-      Point.new(row - 1, col, rows), # up
-      Point.new(row, col + 1, rows), # right
-      Point.new(row + 1, col, rows), # down
-      Point.new(row, col - 1, rows)  # right
+      Point.new(@row - 1, @col, rows), # up
+      Point.new(@row, @col + 1, rows), # right
+      Point.new(@row + 1, @col, rows), # down
+      Point.new(@row, @col - 1, rows)  # right
     ]
     # remove out of bounds paths
     possible_paths.filter do |path|
@@ -35,8 +39,23 @@ class Point
   end
 end
 
+def find_trailheads(rows)
+  trailheads = []
+  rows.each_with_index do |row, r|
+    row.each_with_index do |_, c|
+      point = Point.new(r, c, rows)
+      trailheads.push(point) if point.value.zero?
+    end
+  end
+  trailheads
+end
+
 def part1(input)
-  rows = input.split("\n").map(&:split)
+  rows = input.split("\n").map(&:chars)
+
+  trailheads = find_trailheads(rows)
+
+  puts "Trailheads: #{trailheads.map(&:to_s)}"
 
   puts rows.map(&:join)
 end
