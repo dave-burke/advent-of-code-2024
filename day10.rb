@@ -104,9 +104,27 @@ def part1(input)
 end
 
 def part2(input)
-  puts 'not implemented'
-  nil if input.nil?
+  rows = input.split("\n").map(&:chars)
+  puts rows.map(&:join)
+
+  trails = find_trailheads(rows)
+  puts "Trailheads: #{trails.map(&:to_s)}"
+
+  score = 0
+  until trails.empty?
+    trail = trails.pop
+    if trail.value == 9
+      puts "#{trail} is the end of a full trail"
+      score += 1
+      next
+    end
+    possible_paths = trail.paths
+    # puts "Continuing #{trail} => #{possible_paths.map(&:to_s)}"
+    trails.push(*possible_paths)
+  end
+
+  puts "Total score: #{score}"
 end
 
 input = Aoc.download_input_if_needed(DAY)
-part1(input)
+part2(input)
