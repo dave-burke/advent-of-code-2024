@@ -24,6 +24,25 @@ class Point
     "(#{@row}, #{@col}) = #{value}"
   end
 
+  def in_bounds?
+    @row >= 0 && @row < @rows.length &&
+      @col >= 0 && @col < @rows[0].length
+  end
+
+  def ==(other)
+    eql? other
+  end
+
+  def eql?(other)
+    self.class == other.class &&
+      @row == other.row &&
+      @col == other.col
+  end
+
+  def hash
+    [self.class, @row, @col].hash
+  end
+
   def paths
     possible_paths = [
       Point.new(@row - 1, @col, rows), # up
@@ -31,10 +50,9 @@ class Point
       Point.new(@row + 1, @col, rows), # down
       Point.new(@row, @col - 1, rows)  # right
     ]
-    # remove out of bounds paths
+    # remove out of bounds and invalid paths
     possible_paths.filter do |path|
-      path.row >= 0 && path.row < rows.length &&
-        path.col >= 0 && path.col < rows[0].length
+      path.in_bounds? && path.value == value + 1
     end
   end
 end
@@ -50,14 +68,39 @@ def find_trailheads(rows)
   trailheads
 end
 
+def score_trailhead(trailhead)
+  trails = [trailhead]
+  puts "Scoring #{trailhead}"
+
+  summits = Set.new
+  until trails.empty?
+    trail = trails.pop
+    if trail.value == 9
+      puts "#{trail} is the end of a full trail"
+      summits.add(trail)
+      next
+    end
+    possible_paths = trail.paths
+    # puts "Continuing #{trail} => #{possible_paths.map(&:to_s)}"
+    trails.push(*possible_paths)
+  end
+  summits.length
+end
+
 def part1(input)
   rows = input.split("\n").map(&:chars)
+  puts rows.map(&:join)
 
   trailheads = find_trailheads(rows)
-
   puts "Trailheads: #{trailheads.map(&:to_s)}"
 
-  puts rows.map(&:join)
+  result = 0
+
+  trailheads.each do |trailhead|
+    result += score_trailhead(trailhead)
+  end
+
+  puts "Total score: #{result}"
 end
 
 def part2(input)
