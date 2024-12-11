@@ -38,15 +38,33 @@ def part1(input)
   p stones.length
 end
 
+def blink_recursive(stone, i, stop_i)
+  return 1 if i == stop_i
+
+  return blink_recursive(1, i + 1, stop_i) if stone.zero?
+
+  as_string = stone.to_s
+  len = as_string.length
+  if len.even?
+    half = len / 2
+    first = as_string[0, half].to_i
+    second = as_string[half..].to_i
+    total = blink_recursive(first, i + 1, stop_i)
+    total += blink_recursive(second, i + 1, stop_i)
+    return total
+  end
+
+  blink_recursive(stone * 2024, i + 1, stop_i)
+end
+
 def part2(input)
   stones = input.split.map(&:to_i)
 
-  (0..75).each do |i|
-    puts i
-    stones = blink(stones)
+  result = 0
+  stones.each do |stone|
+    result += blink_recursive(stone, 0, 25)
   end
-  # p stones
-  p stones.length
+  puts result
 end
 
 input = Aoc.download_input_if_needed(DAY)
