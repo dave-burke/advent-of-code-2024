@@ -57,12 +57,63 @@ def blink_recursive(stone, i, stop_i)
   blink_recursive(stone * 2024, i + 1, stop_i)
 end
 
+## Represents a stone
+class Stone
+  def initialize(value, iteration, index)
+    @value = value
+    @iteration = iteration
+    @index = index
+  end
+
+  attr_reader :value, :iteration, :index
+
+  def to_s
+    @value
+  end
+
+  def id
+    "#{value},#{iteration}"
+  end
+end
+
+def iterate(stone, memo)
+  return [Stone.new(1, stone.iteration + 1, stone.index)] if stone.value.zero?
+
+  as_string = stone.value.to_s
+  len = as_string.length
+  if len.even?
+    half = len / 2
+    first = Stone.new(as_string[0, half].to_i, stone.iteration + 1, stone.index)
+    second = Stone.new(as_string[half..].to_i, stone.iteration + 1, stone.index)
+    return [first, second]
+  end
+
+  Stone.new(stone.value * 2024, stone.iteration + 1, stone.index)
+end
+
 def part2(input)
-  stones = input.split.map(&:to_i)
+  values = input.split.map(&:to_i)
+
+  stones = []
+  values.each_with_index do |value, i|
+    stones.push(Stone.new(value, 0, i))
+  end
+
+  stop_at = 25
 
   result = 0
-  stones.each do |stone|
-    result += blink_recursive(stone, 0, 25)
+  cur_index = stones[-1].index
+  until stones.empty?
+    stone = stones.pop
+    if stone.index != cur_index
+      cur_index = stone.index
+      # puts cur_index
+    end
+    if stone.iteration >= stop_at
+      result += 1
+    else
+      stones.push(*iterate(stone))
+    end
   end
   puts result
 end
