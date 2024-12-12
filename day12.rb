@@ -20,8 +20,10 @@ class Point
     neighbor_row = @row + delta_row
     neighbor_col = @col + delta_col
 
-    return nil if neighbor_row.negative? || neighbor_row >= @rows.length
-    return nil if neighbor_col.negative? || neighbor_col >= @rows.length
+    if neighbor_row.negative? || neighbor_row >= @rows.length ||
+       neighbor_col.negative? || neighbor_col >= @rows.length
+      return Point.new(neighbor_row, neighbor_col, nil, @rows)
+    end
 
     @rows[neighbor_row][neighbor_col]
   end
