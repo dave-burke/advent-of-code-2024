@@ -20,8 +20,8 @@ class Point
     neighbor_row = @row + delta_row
     neighbor_col = @col + delta_col
 
-    return nil if neighbor_row < 0 || neighbor_row >= @rows.length
-    return nil if neighbor_col < 0 || neighbor_col >= @rows.length
+    return nil if neighbor_row.negative? || neighbor_row >= @rows.length
+    return nil if neighbor_col.negative? || neighbor_col >= @rows.length
 
     @rows[neighbor_row][neighbor_col]
   end
@@ -90,8 +90,8 @@ def part1(input)
 
   plotted = Set.new
   plots = []
-  rows.each_with_index do |row, r|
-    row.each_with_index do |col, c|
+  rows.each do |row|
+    row.each do |col|
       next if plotted.include?(col)
 
       plot = flood(col)
@@ -116,10 +116,44 @@ def part1(input)
   puts result
 end
 
+def count_walls(plot)
+  perimiter = plot.map(&:perimiter).flatten
+  1 * perimiter.length
+end
+
 def part2(input)
-  puts 'not implemented'
-  nil if input.nil?
+  rows = input.split("\n").map(&:chars)
+  rows.each_with_index do |row, r|
+    row.each_with_index do |col, c|
+      rows[r][c] = Point.new(r, c, col, rows)
+    end
+  end
+
+  plotted = Set.new
+  plots = []
+  rows.each do |row|
+    row.each do |col|
+      next if plotted.include?(col)
+
+      plot = flood(col)
+      plots.push(plot)
+      plotted.merge(plot)
+    end
+  end
+
+  result = 0
+  plots.each do |plot|
+    walls = count_walls(plot)
+    area = plot.length
+
+    price = walls * area
+    # puts "#{char} => #{plots.map(&:to_s)}"
+    puts "#{plot.first.value} has area #{area} and #{walls} walls for price #{price}"
+    result += price
+  end
+
+  puts result
 end
 
 input = Aoc.download_input_if_needed(DAY)
-part1(input)
+part2(input)
