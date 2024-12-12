@@ -38,10 +38,19 @@ def part1(input)
   p stones.length
 end
 
+$memo = {}
+
 def blink_recursive(stone, i, stop_i)
   return 1 if i == stop_i
 
-  return blink_recursive(1, i + 1, stop_i) if stone.zero?
+  key = "#{stone},#{i}"
+  return $memo[key] if $memo.key? key
+
+  if stone.zero?
+    result = blink_recursive(1, i + 1, stop_i)
+    $memo[key] = result
+    return result
+  end
 
   as_string = stone.to_s
   len = as_string.length
@@ -49,72 +58,29 @@ def blink_recursive(stone, i, stop_i)
     half = len / 2
     first = as_string[0, half].to_i
     second = as_string[half..].to_i
+
     total = blink_recursive(first, i + 1, stop_i)
     total += blink_recursive(second, i + 1, stop_i)
+
+    $memo[key] = total
     return total
   end
 
-  blink_recursive(stone * 2024, i + 1, stop_i)
-end
-
-## Represents a stone
-class Stone
-  def initialize(value, iteration, index)
-    @value = value
-    @iteration = iteration
-    @index = index
-  end
-
-  attr_reader :value, :iteration, :index
-
-  def to_s
-    @value
-  end
-
-  def id
-    "#{value},#{iteration}"
-  end
-end
-
-def iterate(stone, memo)
-  return [Stone.new(1, stone.iteration + 1, stone.index)] if stone.value.zero?
-
-  as_string = stone.value.to_s
-  len = as_string.length
-  if len.even?
-    half = len / 2
-    first = Stone.new(as_string[0, half].to_i, stone.iteration + 1, stone.index)
-    second = Stone.new(as_string[half..].to_i, stone.iteration + 1, stone.index)
-    return [first, second]
-  end
-
-  Stone.new(stone.value * 2024, stone.iteration + 1, stone.index)
+  result = blink_recursive(stone * 2024, i + 1, stop_i)
+  $memo[key] = result
+  result
 end
 
 def part2(input)
-  values = input.split.map(&:to_i)
+  stones = input.split.map(&:to_i)
 
-  stones = []
-  values.each_with_index do |value, i|
-    stones.push(Stone.new(value, 0, i))
-  end
-
-  stop_at = 25
+  stop_at = 75
 
   result = 0
-  cur_index = stones[-1].index
-  until stones.empty?
-    stone = stones.pop
-    if stone.index != cur_index
-      cur_index = stone.index
-      # puts cur_index
-    end
-    if stone.iteration >= stop_at
-      result += 1
-    else
-      stones.push(*iterate(stone))
-    end
+  stones.each do |stone|
+    result += blink_recursive(stone, 0, stop_at)
   end
+
   puts result
 end
 
