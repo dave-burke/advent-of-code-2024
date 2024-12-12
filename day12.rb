@@ -26,6 +26,15 @@ class Point
     @rows[neighbor_row][neighbor_col]
   end
 
+  def interior
+    [
+      neighbor(-1, 0), # UP
+      neighbor(0, 1), # RIGHT
+      neighbor(1, 0), # DOWN
+      neighbor(0, -1) # LEFT
+    ].filter { |n| !n.nil? && n.value == @value }
+  end
+
   def perimiter
     [
       neighbor(-1, 0), # UP
@@ -54,6 +63,23 @@ class Point
   end
 end
 
+def flood(point)
+  value = point.value
+
+  todo = [point]
+  plot = Set.new
+
+  until todo.empty?
+    point = todo.pop
+    neighbors = point.interior
+    neighbors.each do |neighbor|
+      todo.push(neighbor) if !todo.include?(neighbor) && !plot.include?(neighbor)
+    end
+    plot.add(point)
+  end
+  plot
+end
+
 def part1(input)
   rows = input.split("\n").map(&:chars)
   rows.each_with_index do |row, r|
@@ -61,6 +87,11 @@ def part1(input)
       rows[r][c] = Point.new(r, c, col, rows)
     end
   end
+
+  plot = flood(rows[0][0])
+  puts plot.map(&:to_s)
+  puts plot.length
+  exit
 
   gardens = {}
   rows.each do |row|
