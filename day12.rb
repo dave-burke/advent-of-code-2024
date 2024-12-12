@@ -82,14 +82,16 @@ def flood(point)
   plot
 end
 
-def part1(input)
+def read_rows(input)
   rows = input.split("\n").map(&:chars)
   rows.each_with_index do |row, r|
     row.each_with_index do |col, c|
       rows[r][c] = Point.new(r, c, col, rows)
     end
   end
+end
 
+def find_plots(rows)
   plotted = Set.new
   plots = []
   rows.each do |row|
@@ -101,6 +103,13 @@ def part1(input)
       plotted.merge(plot)
     end
   end
+  plots
+end
+
+def part1(input)
+  rows = read_rows(input)
+
+  plots = find_plots(rows)
 
   result = 0
   plots.each do |plot|
@@ -124,24 +133,9 @@ def count_walls(plot)
 end
 
 def part2(input)
-  rows = input.split("\n").map(&:chars)
-  rows.each_with_index do |row, r|
-    row.each_with_index do |col, c|
-      rows[r][c] = Point.new(r, c, col, rows)
-    end
-  end
+  rows = read_rows(input)
 
-  plotted = Set.new
-  plots = []
-  rows.each do |row|
-    row.each do |col|
-      next if plotted.include?(col)
-
-      plot = flood(col)
-      plots.push(plot)
-      plotted.merge(plot)
-    end
-  end
+  plots = find_plots(rows)
 
   result = 0
   plots.each do |plot|
