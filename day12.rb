@@ -17,23 +17,14 @@ class Direction
   attr_reader :name, :offset_row, :offset_col
 end
 
-DIRECTIONS_4 = [
-  Direction.new('LEFT', 0, -1),
-  Direction.new('UP', -1, 0),
-  Direction.new('RIGHT', 0, 1),
-  Direction.new('DOWN', 1, 0)
-].freeze
-
-DIRECTIONS_8 = [
-  Direction.new('LEFT', 0, -1),
-  Direction.new('LEFT_UP', -1, -1),
-  Direction.new('UP', -1, 0),
-  Direction.new('UP_RIGHT', -1, 1),
-  Direction.new('RIGHT', 0, 1),
-  Direction.new('DOWN_RIGHT', 1, 1),
-  Direction.new('DOWN', 1, 0),
-  Direction.new('DOWN_LEFT', 1, -1)
-].freeze
+LEFT = Direction.new('LEFT', 0, -1)
+UP_LEFT = Direction.new('LEFT_UP', -1, -1)
+UP = Direction.new('UP', -1, 0)
+UP_RIGHT = Direction.new('UP_RIGHT', -1, 1)
+RIGHT = Direction.new('RIGHT', 0, 1)
+DOWN_RIGHT = Direction.new('DOWN_RIGHT', 1, 1)
+DOWN = Direction.new('DOWN', 1, 0)
+DOWN_LEFT = Direction.new('DOWN_LEFT', 1, -1)
 
 class Point
   def initialize(row, col, value, rows)
@@ -73,11 +64,6 @@ class Point
       neighbor(1, 0), # DOWN
       neighbor(0, -1) # LEFT
     ].filter { |n| n.nil? || n.value != @value }
-  end
-
-  def perimiter_with_diagonals
-    DIRECTIONS_8.map { |d| go(d) }
-                .filter { |n| n.value.nil? || n.value != @value }
   end
 
   def go(direction)
@@ -176,76 +162,72 @@ def part1(input)
   puts result
 end
 
-def follow_wall(point, direction, perimiter)
-  points = []
-  while perimiter.include?(point)
-    points.push(point)
-    point = point.go(direction)
-  end
-  points
+def convex_corner?(point, neighbors, plot)
+  plot.include?(point) && neighbors.all? { !plot.include?(_1) }
 end
 
-def change_direction(point, visited, perimiter)
-  DIRECTIONS_4.each do |direction|
-    next_point = point.go(direction)
-    return direction if perimiter.include?(next_point) && !visited.include?(next_point)
-  end
-  nil
+def concave_corner?(gardens, neighbor, plot)
+  gardens.all? { plot.include?(_1) } && !plot.include?(neighbor)
 end
 
-def count_walls(perimiter)
-  walls = 0
+def count_corners(plot)
+  result = 0
+  plot.each do |point|
+    # When A is in the plot
+    up = point.go(UP)
+    up_right = point.go(UP_RIGHT)
+    right = point.go(RIGHT)
+    down_right = point.go(DOWN_RIGHT)
+    down = point.go(DOWN)
+    down_left = point.go(DOWN_LEFT)
+    left = point.go(LEFT)
+    up_left = point.go(UP_LEFT)
 
-  point = perimiter.first
-  visited = [point]
-  direction = change_direction(point, visited, perimiter)
-  until direction.nil?
-    walls += 1
-    wall = follow_wall(point, direction, perimiter)
-    puts "Following #{wall.map(&:to_s)}"
-    point = wall.last
-    visited += wall
-    direction = change_direction(point, visited, perimiter)
-    puts "Turning #{direction.name} at #{point}" unless direction.nil?
+    # AB
+    # BB
+    result += 1 if convex_corner?(point, [right, down_right, down], plot)
+
+    # BA
+    # BB
+    result += 1 if convex_corner?(point, [left, down_left, down], plot)
+
+    # BB
+    # BA
+    result += 1 if convex_corner?(point, [left, up_left, up], plot)
+
+    # BB
+    # AB
+    result += 1 if convex_corner?(point, [right, up_right, up], plot)
+
+    # BA
+    # AA
+    result += 1 if concave_corner?([point, left, up], up_left, plot)
+
+    # AB
+    # AA
+    result += 1 if concave_corner?([point, right, up], up_right, plot)
+
+    # AA
+    # AB
+    result += 1 if concave_corner?([point, down, right], down_right, plot)
+
+    # AA
+    # BA
+    result += 1 if concave_corner?([point, left, down], down_left, plot)
   end
-
-  walls
+  result
 end
 
 def part2(input)
   rows = read_rows(input)
 
   plots = find_plots(rows)
-          .filter { |p| p.to_a[0].value == 'C' }
-
-  plot = plots[0]
-  puts "Plot: #{plot.map(&:to_s)}"
-  perimiter = Set.new(plot.map(&:perimiter_with_diagonals).flatten)
-  puts "Perimiter: #{perimiter.map(&:to_s)}"
-
-  walls = count_walls(perimiter)
-
-  puts "Found #{walls} walls"
-
-  rows.each do |row|
-    row.each do |point|
-      if plot.include? point
-        print '.'
-      elsif perimiter.include? point
-        print '+'
-      else
-        print point.value
-      end
-    end
-    print "\n"
-  end
-
-  exit
 
   result = 0
   plots.each do |plot|
-    puts "Plot: #{plot.map(&:to_s)}"
-    walls = count_walls(plot)
+    # puts "Plot: #{plot.map(&:to_s)}"
+    # Number of corners = number of walls for any polygon
+    walls = count_corners(plot)
     area = plot.length
 
     price = walls * area
@@ -253,6 +235,8 @@ def part2(input)
     result += price
   end
 
+  # 865044 is too low
+  # 865906 is too low
   puts result
 end
 
