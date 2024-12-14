@@ -63,6 +63,7 @@ def count_quadrants(robots, max_x, max_y)
   top_right = 0
   bottom_left = 0
   bottom_right = 0
+
   robots.each do |robot|
     next if robot.pos_x == mid_x || robot.pos_y == mid_y
 
@@ -77,9 +78,9 @@ def count_quadrants(robots, max_x, max_y)
   [top_left, top_right, bottom_left, bottom_right]
 end
 
-def do_part1(input, max_x, max_y)
+def do_part1(input, steps, max_x, max_y)
   robots = input.split("\n").map { Robot.from_spec(_1, max_x, max_y) }
-  moved = robots.map { _1.move(100) }
+  moved = robots.map { _1.move(steps) }
   # debug(moved, max_x, max_y)
   counts = count_quadrants(moved, max_x, max_y)
   LOG.info(counts)
@@ -87,17 +88,44 @@ def do_part1(input, max_x, max_y)
 end
 
 def part1(input)
-  # result = do_part1(input, 11, 7)
-  result = do_part1(input, 100, 103)
+  # result = do_part1(input, 100, 11, 7)
+  result = do_part1(input, 100, 101, 103)
 
-  # 218915580 is too low
   LOG.info(result)
 end
 
+def count_neighbors(robots)
+  count = 0
+  robots.each do |robot|
+    count += 1 if robots.any? { _1.pos_x == robot.pos_x - 1 && _1.pos_y == robot.pos_y }
+    count += 1 if robots.any? { _1.pos_x == robot.pos_x + 1 && _1.pos_y == robot.pos_y }
+    count += 1 if robots.any? { _1.pos_x == robot.pos_x && _1.pos_y == robot.pos_y - 1 }
+    count += 1 if robots.any? { _1.pos_x == robot.pos_x && _1.pos_y == robot.pos_y + 1 }
+  end
+  count
+end
+
 def part2(input)
-  LOG.warn('not implemented')
-  nil if input.nil?
+  max_x = 101
+  max_y = 103
+  robots = input.split("\n").map { Robot.from_spec(_1, max_x, max_y) }
+
+  max_count = 0
+  max_count_step = 0
+  (5000..10_000).each do |steps|
+    moved = robots.map { _1.move(steps) }
+    count = count_neighbors(moved)
+    if count > max_count
+      LOG.info("New max: #{count}")
+      max_count = count
+      max_count_step = steps
+      debug(moved, max_x, max_y)
+    else
+      LOG.info("#{steps} steps")
+    end
+  end
+  LOG.info("Check #{max_count_step}")
 end
 
 input = Aoc.download_input_if_needed(DAY)
-part1(input)
+part2(input)
