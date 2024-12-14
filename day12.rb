@@ -2,7 +2,16 @@
 # frozen_string_literal: true
 
 require 'net/http'
+require 'logger'
 require_relative 'aoc'
+
+LOG = Logger.new($stdout)
+LOG.level = Logger::INFO
+LOG.datetime_format = '%Y-%m-%d %H:%M'
+LOG.formatter = proc do |severity, datetime, _, msg|
+  date_format = datetime.strftime('%H:%M:%S')
+  "#{date_format} #{severity.ljust(5)}: #{msg}\n"
+end
 
 DAY = 12
 
@@ -151,12 +160,12 @@ def part1(input)
     total_perimiter = plot.map(&:perimiter).map(&:length).sum
     area = plot.length
     price = total_perimiter * area
-    # puts "#{char} => #{plots.map(&:to_s)}"
-    puts "#{plot.first.value} has area #{area} and perimiter #{total_perimiter} for price #{price}"
+    LOG.debug("#{char} => #{plots.map(&:to_s)}")
+    LOG.info("#{plot.first.value} has area #{area} and perimiter #{total_perimiter} for price #{price}")
     result += price
   end
 
-  puts "Found #{plots.length} gardens"
+  LOG.info("Found #{plots.length} gardens")
 
   # Expected: 1930 for example input
   puts result
@@ -184,36 +193,60 @@ def count_corners(plot)
     up_left = point.go(UP_LEFT)
 
     # AB
-    # BB
-    result += 1 if convex_corner?(point, [right, down_right, down], plot)
+    # B
+    if convex_corner?(point, [right, down], plot)
+      LOG.debug("Found convex ◰ at #{point}")
+      result += 1
+    end
 
     # BA
-    # BB
-    result += 1 if convex_corner?(point, [left, down_left, down], plot)
+    #  B
+    if convex_corner?(point, [left, down], plot)
+      LOG.debug("Found convex ◳ at #{point}")
+      result += 1
+    end
 
-    # BB
+    #  B
     # BA
-    result += 1 if convex_corner?(point, [left, up_left, up], plot)
+    if convex_corner?(point, [left, up], plot)
+      LOG.debug("Found convex ◲ at #{point}")
+      result += 1
+    end
 
-    # BB
+    # B
     # AB
-    result += 1 if convex_corner?(point, [right, up_right, up], plot)
+    if convex_corner?(point, [right, up], plot)
+      LOG.debug("Found convex ◱ at #{point}")
+      result += 1
+    end
 
     # BA
     # AA
-    result += 1 if concave_corner?([point, left, up], up_left, plot)
+    if concave_corner?([point, left, up], up_left, plot)
+      LOG.debug("Found concave ◰ at #{point}")
+      result += 1
+    end
 
     # AB
     # AA
-    result += 1 if concave_corner?([point, right, up], up_right, plot)
+    if concave_corner?([point, right, up], up_right, plot)
+      LOG.debug("Found concave ◳ at #{point}")
+      result += 1
+    end
 
     # AA
     # AB
-    result += 1 if concave_corner?([point, down, right], down_right, plot)
+    if concave_corner?([point, down, right], down_right, plot)
+      LOG.debug("Found concave ◲ at #{point}")
+      result += 1
+    end
 
     # AA
     # BA
-    result += 1 if concave_corner?([point, left, down], down_left, plot)
+    if concave_corner?([point, left, down], down_left, plot)
+      LOG.debug("Found convex ◱ at #{point}")
+      result += 1
+    end
   end
   result
 end
@@ -225,18 +258,16 @@ def part2(input)
 
   result = 0
   plots.each do |plot|
-    # puts "Plot: #{plot.map(&:to_s)}"
+    LOG.debug("Plot: #{plot.map(&:to_s)}")
     # Number of corners = number of walls for any polygon
     walls = count_corners(plot)
     area = plot.length
 
     price = walls * area
-    puts "#{plot.first.value} has area #{area} and #{walls} walls for price #{price}"
+    LOG.info("#{plot.first.value} has area #{area} and #{walls} walls for price #{price}")
     result += price
   end
 
-  # 865044 is too low
-  # 865906 is too low
   puts result
 end
 
