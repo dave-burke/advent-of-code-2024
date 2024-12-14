@@ -122,6 +122,7 @@ def part1(input)
 end
 
 def part2(input)
+  # Add 10_000_000_000_000
   puts 'not implemented'
   nil if input.nil?
 end
