@@ -86,6 +86,12 @@ def debug(rows)
   print "\n"
 end
 
+def gps(point)
+  return 0 unless point.crate?
+
+  point.row * 100 + point.col
+end
+
 def part1(input)
   parts = input.split("\n\n")
   rows = parts[0].split("\n").map(&:chars)
@@ -97,15 +103,23 @@ def part1(input)
     row.each_with_index do |col, c|
       robot = Point.new(r, c, rows) if col == '@'
     end
-    print "\n"
   end
 
-  debug rows
+  # debug rows
   directions.chars.map { direction _1 }.each do |direction|
-    puts direction
+    # puts direction
     robot = move(robot, direction)
-    debug rows
+    # debug rows
   end
+
+  result = 0
+  robot.rows.each_with_index do |row, r|
+    row.each_with_index do |_, c|
+      result += gps(Point.new(r, c, rows))
+    end
+  end
+
+  puts result
 end
 
 def part2(input)
