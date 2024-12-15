@@ -122,10 +122,47 @@ def part1(input)
   puts result
 end
 
+## A point in a wide grid
+class Point2 < Point
+  def crate?
+    value == '[' || value == ']'
+  end
+end
+
+def expand(rows)
+  expanded = []
+  rows.each do |row|
+    expanded_row = []
+    row.each do |col|
+      case col
+      when '#', '.'
+        expanded_row.push(col)
+        expanded_row.push(col)
+      when 'O'
+        expanded_row.push('[')
+        expanded_row.push(']')
+      when '@'
+        expanded_row.push '@'
+        expanded_row.push '.'
+      else
+        raise "Invalid char #{col}"
+      end
+    end
+    expanded.push expanded_row
+  end
+  expanded
+end
+
 def part2(input)
-  LOG.warn('not implemented')
+  parts = input.split("\n\n")
+  rows = parts[0].split("\n").map(&:chars)
+  rows = expand(rows)
+  debug(rows)
+
+  # directions = parts[1].split("\n").join.strip
+
   nil if input.nil?
 end
 
 input = Aoc.download_input_if_needed(DAY)
-part1(input)
+part2(input)
