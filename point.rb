@@ -9,6 +9,10 @@ class Direction
   end
 
   attr_reader :name, :offset_row, :offset_col
+
+  def to_s
+    @name
+  end
 end
 
 DIRECTIONS = {
