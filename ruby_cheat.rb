@@ -129,6 +129,21 @@ hash.each do |key, value|
   puts "#{key}: #{value}"
 end
 
+# Errors
+
+begin
+  # Code here that might raise an exception
+  raise NoMemoryError, 'You ran out of memory.'
+rescue NoMemoryError => e
+  puts 'NoMemoryError was raised', e
+rescue RuntimeError => e
+  puts 'RuntimeError was raised now'
+else
+  puts 'This runs if no exceptions were thrown at all'
+ensure
+  puts 'This code always runs no matter what'
+end
+
 # Classes
 
 ##
