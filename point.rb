@@ -31,9 +31,9 @@ class Point
 
   attr_reader :row, :col
 
-  def go(direction)
-    new_row = @row + direction.offset_row
-    new_col = @col + direction.offset_col
+  def go(direction, dist = 1)
+    new_row = @row + (direction.offset_row * dist)
+    new_col = @col + (direction.offset_col * dist)
     Point.new(new_row, new_col)
   end
 
@@ -76,6 +76,11 @@ class Grid
       end
     end
     nil
+  end
+
+  def scan(point, direction, &block)
+    point = point.go(direction) until block.call(point)
+    point
   end
 
   def debug

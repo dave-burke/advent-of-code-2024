@@ -131,6 +131,22 @@ def expand(grid)
 end
 
 def push_crate(grid, crate, direction)
+  if direction == DIRECTIONS[:LEFT]
+    next_space = crate.go(direction, 2)
+    return [grid, crate.go(DIRECTIONS[:RIGHT])] if wall?(grid, next_space)
+    return push_crate(grid, next_space, direction) if crate?(grid, next_space)
+
+    if empty?(grid, next_space)
+      grid = grid.update do |rows|
+        rows[next_space.row][next_space.col] = '['
+        rows[next_space.row][next_space.col + 1] = ']'
+        rows[crate.row][crate.col] = '@'
+        rows[crate.row][crate.col + 1] = '.'
+      end
+      return [grid, crate]
+    end
+  end
+
   raise 'Not implemented'
 end
 
@@ -163,7 +179,7 @@ def part2(input)
   grid.debug
   directions.chars.map { char_to_direction _1 }.each do |direction|
     puts direction
-    robot = move2(grid, robot, direction)
+    grid, robot = move2(grid, robot, direction)
     grid.debug
   end
 
