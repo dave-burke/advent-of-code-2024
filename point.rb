@@ -23,25 +23,18 @@ DIRECTIONS = {
 }.freeze
 
 ## A Point on a grid
-class BasePoint
-  def initialize(row, col, rows)
+class Point
+  def initialize(row, col)
     @row = row
     @col = col
-    @rows = rows
   end
 
   attr_reader :row, :col
 
-  def value
-    return nil if @row.negative? || @row > @rows.length || @col.negative? || @col > @rows[0].length
-
-    @rows.dig(@row, @col)
-  end
-
   def go(direction)
     new_row = @row + direction.offset_row
     new_col = @col + direction.offset_col
-    Point.new(new_row, new_col, @rows)
+    Point.new(new_row, new_col)
   end
 
   def hash
@@ -59,7 +52,26 @@ class BasePoint
   end
 
   def to_s
-    "(#{@row},#{@col})=#{value}"
+    "(#{@row},#{@col})"
+  end
+end
+
+## A grid
+class Grid
+  def initialize(rows)
+    @rows = rows.map(&:freeze).freeze
+  end
+
+  attr_reader :rows
+
+  def value(point)
+    @rows[point.row][point.col]
+  end
+
+  def update(&block)
+    new_rows = @rows.map(&:dup)
+    block.call(new_rows)
+    Grid.new(new_rows)
   end
 end
 

@@ -13,33 +13,23 @@ LOG.formatter = proc do |severity, datetime, _, msg|
   "#{datetime.strftime('%H:%M:%S')} #{severity.ljust(5)}: #{msg}\n"
 end
 
-class Point < BasePoint
-  def wall?
-    value == '#'
-  end
-
-  def crate?
-    value == 'O'
-  end
-
-  def empty?
-    value == '.'
-  end
-
-  def robot?
-    value == '@'
-  end
-
-  def go(direction)
-    new_row = @row + direction.offset_row
-    new_col = @col + direction.offset_col
-    Point.new(new_row, new_col, @rows)
-  end
-
-  attr_reader :rows
+def wall?(grid, point)
+  grid.value(point) == '#'
 end
 
-def direction(char)
+def crate?(grid, point)
+  ['O', '[', ']'].include? grid.value(point)
+end
+
+def empty?(grid, point)
+  grid.value(point) == '.'
+end
+
+def robot?(grid, point)
+  grid.value(point) == '@'
+end
+
+def char_to_direction(char)
   case char
   when '<'
     DIRECTIONS[:LEFT]
@@ -54,36 +44,40 @@ def direction(char)
   end
 end
 
-def search(point, direction, &block)
-  point = point.go(direction) while !point.value.nil? && !block.call(point)
+def search(grid, point, direction, &block)
+  point = point.go(direction) while !grid.value(point).nil? && !block.call(point)
   point
 end
 
-def move(point, direction)
+def move(grid, point, direction)
   destination = point.go(direction)
-  return point if destination.wall?
+  return [grid, point] if wall?(grid, destination)
 
-  if destination.empty?
-    destination.rows[destination.row][destination.col] = '@'
-    destination.rows[point.row][point.col] = '.'
-    return destination
+  if empty?(grid, destination)
+    grid = grid.update do |rows|
+      rows[destination.row][destination.col] = '@'
+      rows[point.row][point.col] = '.'
+    end
+    return [grid, destination]
   end
 
-  if destination.crate?
-    target = search(destination, direction) { !_1.crate? }
-    return point if target.wall? || target.value.nil?
+  if crate?(grid, destination)
+    target = search(grid, destination, direction) { !crate?(grid, _1) }
+    return [grid, point] if wall?(grid, target) || grid.value(target).nil?
 
-    destination.rows[destination.row][destination.col] = '@'
-    destination.rows[point.row][point.col] = '.'
-    destination.rows[target.row][target.col] = 'O'
-    return destination
+    grid = grid.update do |rows|
+      rows[destination.row][destination.col] = '@'
+      rows[point.row][point.col] = '.'
+      rows[target.row][target.col] = 'O'
+    end
+    return [grid, destination]
   end
 
   raise "Invalid point #{destination}"
 end
 
-def debug(rows)
-  rows.each do |row|
+def debug(grid)
+  grid.rows.each do |row|
     row.each do |col|
       print col
     end
@@ -92,71 +86,47 @@ def debug(rows)
   print "\n"
 end
 
-def gps(point)
-  return 0 unless point.crate?
+def gps(grid, point)
+  return 0 unless crate?(grid, point)
 
   point.row * 100 + point.col
 end
 
-def find_robot(rows)
-  rows.each_with_index do |row, r|
+def find_robot(grid)
+  grid.rows.each_with_index do |row, r|
     row.each_with_index do |col, c|
-      return [r, c] if col == '@'
+      return Point.new(r, c) if col == '@'
     end
   end
 end
 
 def part1(input)
   parts = input.split("\n\n")
-  rows = parts[0].split("\n").map(&:chars)
-  robot_location = find_robot(rows)
-  robot = Point.new(robot_location[0], robot_location[1], rows)
+  grid = Grid.new(parts[0].split("\n").map(&:chars))
+  robot = find_robot(grid)
 
   directions = parts[1].split("\n").join.strip
 
   # debug rows
-  directions.chars.map { direction _1 }.each do |direction|
+  directions.chars.map { char_to_direction _1 }.each do |direction|
     # puts direction
-    robot = move(robot, direction)
+    grid, robot = move(grid, robot, direction)
     # debug rows
   end
 
   result = 0
-  robot.rows.each_with_index do |row, r|
+  grid.rows.each_with_index do |row, r|
     row.each_with_index do |_, c|
-      result += gps(Point.new(r, c, rows))
+      result += gps(grid, Point.new(r, c))
     end
   end
 
   puts result
 end
 
-## A point in a wide grid
-class Point2 < Point
-  def crate?
-    value == '[' || value == ']'
-  end
-
-  def crate
-    if value == '['
-      [self, go(DIRECTIONS[:RIGHT])]
-    elsif value == ']'
-      [go(DIRECTIONS[:LEFT]), self]
-    else
-      raise "Not a crate: #{self}"
-    end
-  end
-
-  def go(direction)
-    new_row = @row + direction.offset_row
-    new_col = @col + direction.offset_col
-    Point2.new(new_row, new_col, @rows)
-  end
-end
-
-def expand(rows)
+def expand(grid)
   expanded = []
-  rows.each do |row|
+  grid.rows.each do |row|
     expanded_row = []
     row.each do |col|
       case col
@@ -175,65 +145,44 @@ def expand(rows)
     end
     expanded.push expanded_row
   end
-  expanded
+  Grid.new(expanded)
 end
 
-def push_crate(crate, direction)
-  if direction == DIRECTIONS[:LEFT] || direction == DIRECTIONS[:RIGHT]
-    push_crate_horizontal(crate, direction)
-  else
-    push_crate_vertical(crate, direction)
-  end
+def push_crate(grid, crate, direction)
+  raise 'Not implemented'
 end
 
-# Return nil if can't push, or moved crate if pushed
-def push_crate_horizontal(crate, direction)
-  raise "Got #{crate.map(&:to_s)} but #{direction} not implemented"
-end
-
-# Return nil if can't push, or moved crate if pushed
-def push_crate_vertical(crate, direction)
-  raise "Got #{crate} but #{direction} not implemented"
-end
-
-def move(point, direction)
+def move2(grid, point, direction)
   destination = point.go(direction)
-  return point if destination.wall?
+  return [grid, point] if wall?(grid, destination)
 
-  if destination.empty?
-    destination.rows[destination.row][destination.col] = '@'
-    destination.rows[point.row][point.col] = '.'
-    return destination
+  if empty?(grid, destination)
+    grid = grid.update do |rows|
+      rows[destination.row][destination.col] = '@'
+      rows[point.row][point.col] = '.'
+    end
+    return [grid, destination]
   end
 
-  if destination.crate?
-    crate = destination.crate
-    push_result = push_crate(crate, direction)
-    return point if push_result.nil?
-
-    destination.rows[destination.row][destination.col] = '@'
-    destination.rows[point.row][point.col] = '.'
-    return destination
-  end
+  return push_crate(grid, destination, direction) if crate?(grid, destination)
 
   raise "Invalid point #{destination}"
 end
 
 def part2(input)
   parts = input.split("\n\n")
-  rows = parts[0].split("\n").map(&:chars)
-  rows = expand(rows)
+  grid = Grid.new(parts[0].split("\n").map(&:chars))
+  grid = expand(grid)
 
-  robot_location = find_robot(rows)
-  robot = Point2.new(robot_location[0], robot_location[1], rows)
+  robot = find_robot(grid)
 
   directions = parts[1].split("\n").join.strip
 
-  debug rows
-  directions.chars.map { direction _1 }.each do |direction|
+  debug grid
+  directions.chars.map { char_to_direction _1 }.each do |direction|
     puts direction
-    robot = move(robot, direction)
-    debug rows
+    robot = move2(grid, robot, direction)
+    debug grid
   end
 
   result = 0
