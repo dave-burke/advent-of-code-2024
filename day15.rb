@@ -76,20 +76,10 @@ def move(grid, point, direction)
   raise "Invalid point #{destination}"
 end
 
-def debug(grid)
-  grid.rows.each do |row|
-    row.each do |col|
-      print col
-    end
-    print "\n"
-  end
-  print "\n"
-end
-
 def gps(grid, point)
   return 0 unless crate?(grid, point)
 
-  point.row * 100 + point.col
+  (point.row * 100) + point.col
 end
 
 def find_robot(grid)
@@ -107,11 +97,11 @@ def part1(input)
 
   directions = parts[1].split("\n").join.strip
 
-  # debug rows
+  # grid.debug
   directions.chars.map { char_to_direction _1 }.each do |direction|
     # puts direction
     grid, robot = move(grid, robot, direction)
-    # debug rows
+    # grid.debug rows
   end
 
   result = 0
@@ -178,11 +168,11 @@ def part2(input)
 
   directions = parts[1].split("\n").join.strip
 
-  debug grid
+  grid.debug
   directions.chars.map { char_to_direction _1 }.each do |direction|
     puts direction
     robot = move2(grid, robot, direction)
-    debug grid
+    grid.debug
   end
 
   result = 0

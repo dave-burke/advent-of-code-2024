@@ -56,9 +56,10 @@ class Point
   end
 end
 
-## A grid
+## A grid of characters (strings)
 class Grid
   def initialize(rows)
+    # Ensure internal rows are immutable
     @rows = rows.map(&:freeze).freeze
   end
 
@@ -68,22 +69,22 @@ class Grid
     @rows[point.row][point.col]
   end
 
+  def debug
+    @rows.each do |row|
+      row.each do |col|
+        print col
+      end
+      print "\n"
+    end
+    print "\n"
+  end
+
   def update(&block)
+    # Make a mutable copy of rows
     new_rows = @rows.map(&:dup)
+    # Pass it to the caller to modify
     block.call(new_rows)
+    # Return a new (frozen) grid with the user's modifications
     Grid.new(new_rows)
   end
-end
-
-def map_points(rows, &block)
-  n_rows = rows.length
-  n_cols = rows[0].length
-  result = Array.new(n_rows)
-  rows.each_with_index do |row, r|
-    result[r] = Array.new(n_cols)
-    row.each_with_index do |_, c|
-      result[r][c] = block.call(r, c, rows)
-    end
-  end
-  result
 end
