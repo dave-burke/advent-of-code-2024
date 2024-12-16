@@ -30,6 +30,12 @@ class Point < BasePoint
     value == '@'
   end
 
+  def go(direction)
+    new_row = @row + direction.offset_row
+    new_col = @col + direction.offset_col
+    Point.new(new_row, new_col, @rows)
+  end
+
   attr_reader :rows
 end
 
@@ -92,18 +98,21 @@ def gps(point)
   point.row * 100 + point.col
 end
 
+def find_robot(rows)
+  rows.each_with_index do |row, r|
+    row.each_with_index do |col, c|
+      return [r, c] if col == '@'
+    end
+  end
+end
+
 def part1(input)
   parts = input.split("\n\n")
   rows = parts[0].split("\n").map(&:chars)
+  robot_location = find_robot(rows)
+  robot = Point.new(robot_location[0], robot_location[1], rows)
 
   directions = parts[1].split("\n").join.strip
-
-  robot = nil
-  rows.each_with_index do |row, r|
-    row.each_with_index do |col, c|
-      robot = Point.new(r, c, rows) if col == '@'
-    end
-  end
 
   # debug rows
   directions.chars.map { direction _1 }.each do |direction|
@@ -126,6 +135,22 @@ end
 class Point2 < Point
   def crate?
     value == '[' || value == ']'
+  end
+
+  def crate
+    if value == '['
+      [self, go(DIRECTIONS[:RIGHT])]
+    elsif value == ']'
+      [go(DIRECTIONS[:LEFT]), self]
+    else
+      raise "Not a crate: #{self}"
+    end
+  end
+
+  def go(direction)
+    new_row = @row + direction.offset_row
+    new_col = @col + direction.offset_col
+    Point2.new(new_row, new_col, @rows)
   end
 end
 
@@ -153,15 +178,72 @@ def expand(rows)
   expanded
 end
 
+def push_crate(crate, direction)
+  if direction == DIRECTIONS[:LEFT] || direction == DIRECTIONS[:RIGHT]
+    push_crate_horizontal(crate, direction)
+  else
+    push_crate_vertical(crate, direction)
+  end
+end
+
+# Return nil if can't push, or moved crate if pushed
+def push_crate_horizontal(crate, direction)
+  raise "Got #{crate.map(&:to_s)} but #{direction} not implemented"
+end
+
+# Return nil if can't push, or moved crate if pushed
+def push_crate_vertical(crate, direction)
+  raise "Got #{crate} but #{direction} not implemented"
+end
+
+def move(point, direction)
+  destination = point.go(direction)
+  return point if destination.wall?
+
+  if destination.empty?
+    destination.rows[destination.row][destination.col] = '@'
+    destination.rows[point.row][point.col] = '.'
+    return destination
+  end
+
+  if destination.crate?
+    crate = destination.crate
+    push_result = push_crate(crate, direction)
+    return point if push_result.nil?
+
+    destination.rows[destination.row][destination.col] = '@'
+    destination.rows[point.row][point.col] = '.'
+    return destination
+  end
+
+  raise "Invalid point #{destination}"
+end
+
 def part2(input)
   parts = input.split("\n\n")
   rows = parts[0].split("\n").map(&:chars)
   rows = expand(rows)
-  debug(rows)
 
-  # directions = parts[1].split("\n").join.strip
+  robot_location = find_robot(rows)
+  robot = Point2.new(robot_location[0], robot_location[1], rows)
 
-  nil if input.nil?
+  directions = parts[1].split("\n").join.strip
+
+  debug rows
+  directions.chars.map { direction _1 }.each do |direction|
+    puts direction
+    robot = move(robot, direction)
+    debug rows
+  end
+
+  result = 0
+  robot.rows.each_with_index do |row, r|
+    row.each_with_index do |_, c|
+      result += gps(Point.new(r, c, rows))
+    end
+  end
+
+  puts result
 end
 
 input = Aoc.download_input_if_needed(DAY)
