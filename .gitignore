@@ -62,6 +62,7 @@ session.txt
 # https://adventofcode.com/about#faq_copying
 day*.txt*
 input*.txt*
+scratch.txt
 
 # html puzzle data (for offline work)
 /html
