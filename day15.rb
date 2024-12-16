@@ -82,18 +82,10 @@ def gps(grid, point)
   (point.row * 100) + point.col
 end
 
-def find_robot(grid)
-  grid.rows.each_with_index do |row, r|
-    row.each_with_index do |col, c|
-      return Point.new(r, c) if col == '@'
-    end
-  end
-end
-
 def part1(input)
   parts = input.split("\n\n")
   grid = Grid.new(parts[0].split("\n").map(&:chars))
-  robot = find_robot(grid)
+  robot = grid.find_first('@')
 
   directions = parts[1].split("\n").join.strip
 
@@ -164,7 +156,7 @@ def part2(input)
   grid = Grid.new(parts[0].split("\n").map(&:chars))
   grid = expand(grid)
 
-  robot = find_robot(grid)
+  robot = grid.find_first('@')
 
   directions = parts[1].split("\n").join.strip
 

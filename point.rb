@@ -69,6 +69,15 @@ class Grid
     @rows[point.row][point.col]
   end
 
+  def find_first(char)
+    @rows.each_with_index do |row, r|
+      row.each_with_index do |col, c|
+        return Point.new(r, c) if col == char
+      end
+    end
+    nil
+  end
+
   def debug
     @rows.each do |row|
       row.each do |col|
