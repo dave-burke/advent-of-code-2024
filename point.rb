@@ -63,6 +63,10 @@ class Grid
     @rows = rows.map(&:freeze).freeze
   end
 
+  def self.from_string(input)
+    Grid.new(input.split("\n").map(&:chars))
+  end
+
   attr_reader :rows
 
   def value(point)
