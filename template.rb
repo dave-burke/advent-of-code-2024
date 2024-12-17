@@ -7,7 +7,7 @@ require_relative 'aoc'
 
 DAY = 0
 
-LOG = Logger.new($stdout, Logger::INFO)
+LOG = Logger.new($stdout, level: Logger::DEBUG)
 LOG.formatter = proc do |severity, datetime, _, msg|
   "#{datetime.strftime('%H:%M:%S')} #{severity.ljust(5)}: #{msg}\n"
 end
