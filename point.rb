@@ -13,6 +13,10 @@ class Direction
   def to_s
     @name
   end
+
+  def inspect
+    to_s
+  end
 end
 
 DIRECTIONS = {
@@ -54,6 +58,10 @@ class Point
   def to_s
     "(#{@row},#{@col})"
   end
+
+  def inspect
+    to_s
+  end
 end
 
 ## A grid of characters (strings)
@@ -71,6 +79,10 @@ class Grid
 
   def value(point)
     @rows[point.row][point.col]
+  end
+
+  def neighbors4(point)
+    DIRECTIONS.transform_values { point.go(_1) }
   end
 
   def find_first(char)
