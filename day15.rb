@@ -133,17 +133,16 @@ end
 def push_crate(grid, crate, direction)
   if direction == DIRECTIONS[:LEFT]
     next_space = crate.go(direction, 2)
-    return [grid, crate.go(DIRECTIONS[:RIGHT])] if wall?(grid, next_space)
+    return nil if wall?(grid, next_space)
     return push_crate(grid, next_space, direction) if crate?(grid, next_space)
 
     if empty?(grid, next_space)
       grid = grid.update do |rows|
         rows[next_space.row][next_space.col] = '['
         rows[next_space.row][next_space.col + 1] = ']'
-        rows[crate.row][crate.col] = '@'
-        rows[crate.row][crate.col + 1] = '.'
+        rows[crate.row][crate.col] = '.'
       end
-      return [grid, crate]
+      return grid
     end
   end
 
@@ -162,7 +161,14 @@ def move2(grid, point, direction)
     return [grid, destination]
   end
 
-  return push_crate(grid, destination, direction) if crate?(grid, destination)
+  attempted_push = push_crate(grid, destination, direction) if crate?(grid, destination)
+  return [grid, point] if attempted_push.nil?
+
+  grid = attempted_push.update do |rows|
+    rows[destination.row][destination.col] = '@'
+    rows[point.row][point.col] = '.'
+  end
+  return [grid, destination]
 
   raise "Invalid point #{destination}"
 end
@@ -181,6 +187,7 @@ def part2(input)
     puts direction
     grid, robot = move2(grid, robot, direction)
     grid.debug
+    gets
   end
 
   result = 0
