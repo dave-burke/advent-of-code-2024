@@ -102,3 +102,8 @@ class Grid
     Grid.new(new_rows)
   end
 end
+
+## Useful with grid.update
+def point_value!(rows, point, value)
+  rows[point.row][point.col] = value
+end

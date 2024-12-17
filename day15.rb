@@ -8,7 +8,8 @@ require_relative 'point'
 
 DAY = 15
 
-LOG = Logger.new($stdout, Logger::INFO)
+LOG = Logger.new($stdout)
+LOG.level = Logger::INFO
 LOG.formatter = proc do |severity, datetime, _, msg|
   "#{datetime.strftime('%H:%M:%S')} #{severity.ljust(5)}: #{msg}\n"
 end
@@ -130,76 +131,63 @@ def expand(grid)
   Grid.new(expanded)
 end
 
-def push_crate(grid, crate, direction)
-  if direction == DIRECTIONS[:LEFT]
-    next_space = crate.go(direction, 2)
-    return nil if wall?(grid, next_space)
-    return push_crate(grid, next_space, direction) if crate?(grid, next_space)
-
-    if empty?(grid, next_space)
-      grid = grid.update do |rows|
-        rows[next_space.row][next_space.col] = '['
-        rows[next_space.row][next_space.col + 1] = ']'
-        rows[crate.row][crate.col] = '.'
-      end
-      return grid
-    end
+def move_crate(grid, crate, direction)
+  destination0 = crate[0].go(direction)
+  destination1 = crate[1].go(direction)
+  LOG.debug("Moving #{crate.map(&:to_s)} #{direction.name} to #{[destination0, destination1].map(&:to_s)}")
+  grid.update do |rows|
+    point_value!(rows, crate[0], '.')
+    point_value!(rows, crate[1], '.')
+    point_value!(rows, destination0, grid.value(crate[0]))
+    point_value!(rows, destination1, grid.value(crate[1]))
   end
-  if direction == DIRECTIONS[:RIGHT]
-    next_space = crate.go(direction, 2)
-    return nil if wall?(grid, next_space)
-    # TODO: do we need to not return here, but finish pushing *this* crate?
-    return push_crate(grid, next_space, direction) if crate?(grid, next_space)
+end
 
-    if empty?(grid, next_space)
-      updated = grid.update do |rows|
-        rows[next_space.row][next_space.col] = ']'
-        rows[next_space.row][next_space.col - 1] = '['
-        rows[crate.row][crate.col] = '.'
-      end
-      return updated
-    end
+def destination_points(crate, direction)
+  crate
+    .map { _1.go(direction) }
+    .reject { crate.include? _1 }
+end
+
+def complete_crate(grid, crate_point)
+  if grid.value(crate_point) == '['
+    [crate_point, crate_point.go(DIRECTIONS[:RIGHT])]
+  else
+    [crate_point.go(DIRECTIONS[:LEFT]), crate_point]
   end
-  if direction == DIRECTIONS[:DOWN]
-    other_crate = if grid.value(crate) == '['
-                    crate.go(DIRECTIONS[:RIGHT])
-                  else
-                    crate.go(DIRECTIONS[:LEFT])
-                  end
-    next_side1 = crate.go(DIRECTIONS[:DOWN])
-    next_side2 = other_crate.go(DIRECTIONS[:DOWN])
-    # TODO: this is not detecting walls correctly
-    return grid if wall?(grid, next_side1) || wall?(grid, next_side2)
+end
 
-    if empty?(grid, next_side1) && empty?(grid, next_side2)
-      updated = grid.update do |rows|
-        rows[crate.row][crate.col] = '.'
-        rows[other_crate.row][other_crate.col] = '.'
-        rows[next_side1.row][next_side1.col] = grid.value(crate)
-        rows[next_side2.row][next_side2.col] = grid.value(other_crate)
-      end
-      return updated
-    end
+def push_crate(grid, crate_part, direction)
+  crate = complete_crate(grid, crate_part)
+  destinations = destination_points(crate, direction)
+  LOG.debug("Attempting to move #{crate.map(&:to_s)} to #{destinations.map(&:to_s)}")
 
-    attempted_push = grid
-    if crate?(grid, next_side1)
-      attempted_push = push_crate(grid, next_side1, direction)
-      return grid if attempted_push.nil?
-    end
-    if crate?(grid, next_side2)
-      attempted_push = push_crate(grid, next_side2, direction)
-      return grid if attempted_push.nil?
-    end
-    updated = attempted_push.update do |rows|
-      rows[crate.row][crate.col] = '.'
-      rows[other_crate.row][other_crate.col] = '.'
-      rows[next_side1.row][next_side1.col] = grid.value(crate)
-      rows[next_side2.row][next_side2.col] = grid.value(other_crate)
-    end
-    return updated
+  if destinations.any? { wall?(grid, _1) }
+    LOG.debug('There is a wall in the way.')
+    return nil
+  end
+  if destinations.all? { empty?(grid, _1) }
+    LOG.debug('Success!')
+    return move_crate(grid, crate, direction)
   end
 
-  raise 'Not implemented'
+  next_crates = destinations
+                .filter { crate?(grid, _1) }
+                .map { complete_crate(grid, _1) }
+                .uniq
+
+  result = grid
+  unless next_crates.empty?
+    LOG.debug("Need to move crates at #{next_crates.map { _1.map(&:to_s) }}")
+    result = push_crate(result, next_crates[0][0], direction)
+    return nil if result.nil?
+  end
+  if next_crates.length > 1
+    result = push_crate(result, next_crates[1][0], direction)
+    return nil if result.nil?
+  end
+  # successfully moved other crates
+  move_crate(result, crate, direction)
 end
 
 def move2(grid, point, direction)
@@ -226,6 +214,12 @@ def move2(grid, point, direction)
   raise "Invalid point #{destination}"
 end
 
+def gps2(grid, point)
+  return 0 unless grid.value(point) == '['
+
+  (100 * point.row) + point.col
+end
+
 def part2(input)
   parts = input.split("\n\n")
   grid = Grid.new(parts[0].split("\n").map(&:chars))
@@ -235,18 +229,19 @@ def part2(input)
 
   directions = parts[1].split("\n").join.strip
 
-  grid.debug
+  # grid.debug
   directions.chars.map { char_to_direction _1 }.each do |direction|
-    puts direction
+    # puts direction
     grid, robot = move2(grid, robot, direction)
-    grid.debug
-    gets
+    # grid.debug
+    # sleep(0.2)
+    # gets
   end
 
   result = 0
-  robot.rows.each_with_index do |row, r|
+  grid.rows.each_with_index do |row, r|
     row.each_with_index do |_, c|
-      result += gps(Point.new(r, c, rows))
+      result += gps2(grid, Point.new(r, c))
     end
   end
 
