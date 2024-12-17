@@ -148,16 +148,55 @@ def push_crate(grid, crate, direction)
   if direction == DIRECTIONS[:RIGHT]
     next_space = crate.go(direction, 2)
     return nil if wall?(grid, next_space)
+    # TODO: do we need to not return here, but finish pushing *this* crate?
     return push_crate(grid, next_space, direction) if crate?(grid, next_space)
 
     if empty?(grid, next_space)
-      grid = grid.update do |rows|
+      updated = grid.update do |rows|
         rows[next_space.row][next_space.col] = ']'
         rows[next_space.row][next_space.col - 1] = '['
         rows[crate.row][crate.col] = '.'
       end
-      return grid
+      return updated
     end
+  end
+  if direction == DIRECTIONS[:DOWN]
+    other_crate = if grid.value(crate) == '['
+                    crate.go(DIRECTIONS[:RIGHT])
+                  else
+                    crate.go(DIRECTIONS[:LEFT])
+                  end
+    next_side1 = crate.go(DIRECTIONS[:DOWN])
+    next_side2 = other_crate.go(DIRECTIONS[:DOWN])
+    # TODO: this is not detecting walls correctly
+    return grid if wall?(grid, next_side1) || wall?(grid, next_side2)
+
+    if empty?(grid, next_side1) && empty?(grid, next_side2)
+      updated = grid.update do |rows|
+        rows[crate.row][crate.col] = '.'
+        rows[other_crate.row][other_crate.col] = '.'
+        rows[next_side1.row][next_side1.col] = grid.value(crate)
+        rows[next_side2.row][next_side2.col] = grid.value(other_crate)
+      end
+      return updated
+    end
+
+    attempted_push = grid
+    if crate?(grid, next_side1)
+      attempted_push = push_crate(grid, next_side1, direction)
+      return grid if attempted_push.nil?
+    end
+    if crate?(grid, next_side2)
+      attempted_push = push_crate(grid, next_side2, direction)
+      return grid if attempted_push.nil?
+    end
+    updated = attempted_push.update do |rows|
+      rows[crate.row][crate.col] = '.'
+      rows[other_crate.row][other_crate.col] = '.'
+      rows[next_side1.row][next_side1.col] = grid.value(crate)
+      rows[next_side2.row][next_side2.col] = grid.value(other_crate)
+    end
+    return updated
   end
 
   raise 'Not implemented'
@@ -178,11 +217,11 @@ def move2(grid, point, direction)
   attempted_push = push_crate(grid, destination, direction) if crate?(grid, destination)
   return [grid, point] if attempted_push.nil?
 
-  grid = attempted_push.update do |rows|
+  updated = attempted_push.update do |rows|
     rows[destination.row][destination.col] = '@'
     rows[point.row][point.col] = '.'
   end
-  return [grid, destination]
+  return [updated, destination]
 
   raise "Invalid point #{destination}"
 end
