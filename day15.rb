@@ -145,6 +145,20 @@ def push_crate(grid, crate, direction)
       return grid
     end
   end
+  if direction == DIRECTIONS[:RIGHT]
+    next_space = crate.go(direction, 2)
+    return nil if wall?(grid, next_space)
+    return push_crate(grid, next_space, direction) if crate?(grid, next_space)
+
+    if empty?(grid, next_space)
+      grid = grid.update do |rows|
+        rows[next_space.row][next_space.col] = ']'
+        rows[next_space.row][next_space.col - 1] = '['
+        rows[crate.row][crate.col] = '.'
+      end
+      return grid
+    end
+  end
 
   raise 'Not implemented'
 end
