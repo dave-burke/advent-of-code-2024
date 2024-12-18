@@ -116,6 +116,25 @@ class Route
     points.sum
   end
 
+  def debug(grid)
+    grid = grid.update do |rows|
+      @path.each do |step|
+        step_char = case step.direction.name
+                    when 'UP'
+                      '^'
+                    when 'DOWN'
+                      'v'
+                    when 'LEFT'
+                      '<'
+                    when 'RIGHT'
+                      '>'
+                    end
+        rows[step.point.row][step.point.col] = step_char
+      end
+    end
+    grid.debug
+  end
+
   def to_s
     @path.to_s
   end
@@ -134,8 +153,12 @@ def part1(input)
   routes = [Route.new(Step.new(start, :start, DIRECTIONS[:RIGHT]))]
 
   full_routes = []
+  # i = 0
   until routes.empty?
-    route = routes.pop
+    route = routes.shift # shift = bfs, pop = dfs
+    # route.debug(grid) # if (i % 10_000).zero?
+    # gets
+    # i += 1
     next_moves = find_next_moves(grid, route.last.point)
     LOG.debug("From #{route.last.point}, can move to any of  #{next_moves}")
     next_moves.each do |direction, point|
