@@ -8,7 +8,7 @@ require_relative 'point'
 
 DAY = 16
 
-LOG = Logger.new($stdout, level: Logger::DEBUG)
+LOG = Logger.new($stdout, level: Logger::INFO)
 LOG.formatter = proc do |severity, datetime, _, msg|
   "#{datetime.strftime('%H:%M:%S')} #{severity.ljust(5)}: #{msg}\n"
 end
@@ -30,6 +30,10 @@ class Step
   end
 
   attr_reader :point, :type, :direction
+
+  def hash
+    [self.class, @point, @type, @direction].hash
+  end
 
   def ==(other)
     eql? other
@@ -96,6 +100,14 @@ class Route
     Route.new(*(@path + steps))
   end
 
+  def include?(step)
+    @path.include? step
+  end
+
+  def up_to(step)
+    @path.take_while { _1 != step } + [step]
+  end
+
   def length
     @path.length
   end
@@ -153,21 +165,29 @@ def part1(input)
   routes = [Route.new(Step.new(start, :start, DIRECTIONS[:RIGHT]))]
 
   full_routes = []
-  # i = 0
+  all_steps = Set.new
+  i = 0
   until routes.empty?
     route = routes.shift # shift = bfs, pop = dfs
-    # route.debug(grid) # if (i % 10_000).zero?
+    if (i % 10_000).zero?
+      route.debug(grid)
+      LOG.info("Processing #{routes.length} routes")
+      LOG.info("Seen #{all_steps.length} total steps")
+    end
+
     # gets
-    # i += 1
+    i += 1
     next_moves = find_next_moves(grid, route.last.point)
     LOG.debug("From #{route.last.point}, can move to any of  #{next_moves}")
     next_moves.each do |direction, point|
       new_steps = route.calc_steps_to(point, direction)
       next if new_steps.nil?
+      next if new_steps.any? { all_steps.include? _1 }
 
       LOG.debug("Can get to #{point} via #{new_steps}")
 
       new_route = route.add_steps(new_steps)
+      all_steps.merge new_steps
       if point == finish
         LOG.info("Success! #{new_route}")
         full_routes.push(new_route)
@@ -180,6 +200,7 @@ def part1(input)
 
   LOG.info("Found #{full_routes.length} routes to the end")
   min = full_routes.map(&:cost).min
+  # 116428 is too high
   LOG.info("The cheapest route costs #{min}")
 end
 

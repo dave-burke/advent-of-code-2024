@@ -10,6 +10,20 @@ class Direction
 
   attr_reader :name, :offset_row, :offset_col
 
+  def hash
+    [self.class, @offset_row, @offset_col].hash
+  end
+
+  def ==(other)
+    eql? other
+  end
+
+  def eql?(other)
+    self.class == other.class &&
+      @offset_row == other.offset_row &&
+      @offset_col == other.offset_col
+  end
+
   def to_s
     @name
   end
