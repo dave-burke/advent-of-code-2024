@@ -8,7 +8,7 @@ require_relative 'point'
 
 DAY = 16
 
-LOG = Logger.new($stdout, level: Logger::INFO)
+LOG = Logger.new($stdout, level: Logger::DEBUG)
 LOG.formatter = proc do |severity, datetime, _, msg|
   "#{datetime.strftime('%H:%M:%S')} #{severity.ljust(5)}: #{msg}\n"
 end
@@ -61,8 +61,10 @@ class Step
 end
 
 def oposite?(direction_a, direction_b)
-  direction_a.offset_row == direction_b.offset_row ||
-    direction_a.offset_col == direction_b.offset_col
+  return false if direction_a == direction_b
+  return true if direction_a.offset_row == direction_b.offset_row
+
+  true if direction_a.offset_col == direction_b.offset_col
 end
 
 ## A full route
@@ -77,23 +79,25 @@ class Route
     @path.last
   end
 
-  def go(point, direction)
+  def calc_steps_to(point, direction)
     if @path.map(&:point).include? point
       LOG.debug("#{point} is already in this route.")
       return nil
     end
     current_direction = @path.last.direction
-
-    return add_steps(Step.new(point, :move, direction)) if direction == current_direction
-
     return nil if oposite? direction, current_direction
 
-    add_steps(Step.new(@path.last.point, :turn, direction), Step.new(point, :move, direction))
+    return [Step.new(point, :move, direction)] if direction == current_direction
+
+    [Step.new(@path.last.point, :turn, direction), Step.new(point, :move, direction)]
   end
 
-  def add_steps(*steps)
-    LOG.debug("#{@path} + #{steps}")
+  def add_steps(steps)
     Route.new(*(@path + steps))
+  end
+
+  def length
+    @path.length
   end
 
   def cost
@@ -135,13 +139,19 @@ def part1(input)
     next_moves = find_next_moves(grid, route.last.point)
     LOG.debug("From #{route.last.point}, can move to any of  #{next_moves}")
     next_moves.each do |direction, point|
-      new_route = route.go(point, direction)
+      new_steps = route.calc_steps_to(point, direction)
+      next if new_steps.nil?
+
+      LOG.debug("Can get to #{point} via #{new_steps}")
+
+      new_route = route.add_steps(new_steps)
       if point == finish
-        LOG.info(new_route)
+        LOG.info("Success! #{new_route}")
         full_routes.push(new_route)
         break
       end
-      routes.push(new_route) unless new_route.nil?
+      LOG.debug("Route is now #{new_route.length} steps")
+      routes.push(new_route)
     end
   end
 
