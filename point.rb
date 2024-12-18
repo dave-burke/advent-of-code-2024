@@ -82,7 +82,11 @@ class Grid
   end
 
   def neighbors4(point)
-    DIRECTIONS.transform_values { point.go(_1) }
+    result = {}
+    DIRECTIONS.each_value do |direction|
+      result[direction] = point.go(direction)
+    end
+    result
   end
 
   def find_first(char)
