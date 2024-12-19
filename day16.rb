@@ -88,8 +88,12 @@ class Route
       LOG.debug("#{point} is already in this route.")
       return nil
     end
+
     current_direction = @path.last.direction
-    return nil if oposite? direction, current_direction
+    if oposite? direction, current_direction
+      LOG.debug("Going #{direction} would be going backwards")
+      return nil
+    end
 
     return [Step.new(point, :move, direction)] if direction == current_direction
 
@@ -145,6 +149,15 @@ class Route
       end
     end
     grid.debug
+  end
+
+  def mark(grid)
+    points = Set.new(@path.map(&:point))
+    grid.update do |rows|
+      points.each do |point|
+        rows[point.row][point.col] = 'O'
+      end
+    end
   end
 
   def to_s
@@ -218,9 +231,73 @@ def part1(input)
 end
 
 def part2(input)
-  LOG.warn('not implemented')
-  nil if input.nil?
+  grid = Grid.from_string(input)
+  start = grid.find_first('S')
+  finish = grid.find_first('E')
+  LOG.info("Finding route from #{start} to #{finish}")
+
+  routes = [Route.new(Step.new(start, :start, DIRECTIONS[:RIGHT]))]
+
+  full_routes = []
+  cheapest_route_to_steps = {}
+  until routes.empty?
+    route = routes.shift # shift = bfs, pop = dfs
+
+    next_moves = find_next_moves(grid, route.last.point)
+    LOG.debug("From #{route.last.point}, can move to any of  #{next_moves}")
+
+    found_cheaper_route = false
+    next_moves.each do |direction, point|
+      LOG.debug("Trying to go #{direction} to #{point}")
+      new_steps = route.calc_steps_to(point, direction)
+      if new_steps.nil?
+        LOG.debug("Can't go #{direction} from #{point}. See above.")
+        next
+      end
+
+      new_route = route.add_steps(new_steps)
+      last_step = new_route.last
+      maybe_cheaper = cheapest_route_to_steps[last_step]
+      if maybe_cheaper.nil? || maybe_cheaper.cost >= route.cost
+        LOG.debug("This route to #{last_step} is cheaper than what we found before.") unless maybe_cheaper.nil?
+        cheapest_route_to_steps[last_step] = new_route
+      else
+        # There is a cheaper path to this step
+        LOG.debug("Found a cheaper route to #{last_step}")
+        LOG.debug("This route (#{route.cost}): #{route}")
+        LOG.debug("Cheaper route (#{maybe_cheaper.cost}): #{maybe_cheaper}")
+        next
+      end
+
+      LOG.debug("Can get to #{point} via #{new_steps}")
+
+      if point == finish
+        LOG.info("Success! #{new_route.cost}")
+        full_routes.push(new_route)
+        break
+      end
+      LOG.debug("Route is now #{new_route.length} steps and costs #{new_route.cost}")
+      routes.push(new_route)
+      # new_route.debug(grid)
+      # gets
+    end
+  end
+
+  LOG.info("Found #{full_routes.length} routes to the end")
+  route_costs = {}
+  full_routes.each do |full_route|
+    route_costs[full_route] = full_route.cost
+  end
+  cheapest_cost = route_costs.values.min
+  cheapest_routes = route_costs.filter { _2 == cheapest_cost }
+
+  LOG.info("Found #{cheapest_routes.length} best routes, which cost #{cheapest_cost}")
+
+  # cheapest_routes.each_key do |cheap_route|
+  #   grid = cheap_route.mark(grid)
+  # end
+  # grid.debug
 end
 
 input = Aoc.download_input_if_needed(DAY)
-part1(input)
+part2(input)
