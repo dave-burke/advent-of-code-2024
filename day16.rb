@@ -165,31 +165,42 @@ def part1(input)
   routes = [Route.new(Step.new(start, :start, DIRECTIONS[:RIGHT]))]
 
   full_routes = []
-  all_steps = Set.new
+  cheapest_route_to_steps = {}
   i = 0
   until routes.empty?
     route = routes.shift # shift = bfs, pop = dfs
     if (i % 10_000).zero?
-      route.debug(grid)
+      # route.debug(grid)
+      # gets
       LOG.info("Processing #{routes.length} routes")
-      LOG.info("Seen #{all_steps.length} total steps")
     end
-
-    # gets
     i += 1
+
     next_moves = find_next_moves(grid, route.last.point)
     LOG.debug("From #{route.last.point}, can move to any of  #{next_moves}")
+
+    found_cheaper_route = false
     next_moves.each do |direction, point|
       new_steps = route.calc_steps_to(point, direction)
       next if new_steps.nil?
-      next if new_steps.any? { all_steps.include? _1 }
+
+      new_steps.each do |step|
+        maybe_cheaper = cheapest_route_to_steps[step]
+        if maybe_cheaper.nil? || maybe_cheaper.cost > route.cost
+          cheapest_route_to_steps[step] = route
+        else
+          # There is a cheaper path to this step
+          found_cheaper_route = true
+          break
+        end
+      end
+      break if found_cheaper_route
 
       LOG.debug("Can get to #{point} via #{new_steps}")
 
       new_route = route.add_steps(new_steps)
-      all_steps.merge new_steps
       if point == finish
-        LOG.info("Success! #{new_route}")
+        # LOG.info("Success! #{new_route}")
         full_routes.push(new_route)
         break
       end
@@ -199,9 +210,11 @@ def part1(input)
   end
 
   LOG.info("Found #{full_routes.length} routes to the end")
-  min = full_routes.map(&:cost).min
-  # 116428 is too high
-  LOG.info("The cheapest route costs #{min}")
+  full_routes.sort! { |a, b| a.cost <=> b.cost }
+  cheapest_route = full_routes.first
+  cheapest_cost = cheapest_route.cost
+  cheapest_route.debug(grid)
+  LOG.info("The cheapest route costs #{cheapest_cost}")
 end
 
 def part2(input)
